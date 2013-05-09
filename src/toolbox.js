@@ -13,7 +13,7 @@
     }
     else {
         // Vanilla environments (browser)
-        root.$toolbox = builer(root, {}, false, builder);
+        root.$toolbox = builder(root, {}, false, builder);
     }
 
 })(this, function (root, exports, config, builder, undefined) {
@@ -51,6 +51,7 @@
     // for usage inside this builder function
     var getType
         , each
+        , map
         , reduce
         , filter = null;
 
@@ -82,9 +83,9 @@
     })();
     function ecma262ForEach(iterator, context) {
             if (!this)
-                throw new TypeError("Array is null or undefined.");
+                throw new Error("Array is null or undefined.");
             if (!isType(iterator, 'function'))
-                throw new TypeError("Iterator is not callable.");
+                throw new Error("Iterator is not callable.");
 
         var o     = Object(this);
         var len   = o.length >>> 0; // Force o.length to int
@@ -99,6 +100,32 @@
         }
     }
 
+    /**
+     * Map a function across a collection, generating a new collection as a result.
+     * @param {Array} collection - The collection to map
+     * @param {function} fn - The mapping function to apply
+     */
+    exports.map = map = (function() {
+        var _map = Array.prototype.map || (function() {
+            Array.prototype.map = function (c, fn) {
+                if (!this)
+                    throw new Error('Array is null or undefined');
+                if (!fn)
+                    throw new Error('Mapping function is null or undefined.');
+
+                var result = [];
+                this.forEach(function(o, i, coll) {
+                    result.push(fn.call(null, o, i, coll));
+                });
+                return result;
+            };
+
+            return Array.prototype.map;
+        })();
+
+        return function(c, fn) { return _map.call(c, fn); };
+    })();
+
 
     /**
      *  Reduce a collection to a single value, by applying elements left to right until only one is left
@@ -111,14 +138,14 @@
             Array.prototype.reduce = function (accumulator, memo) {
 
                 if (!this)
-                    throw new TypeError("Array is null or undefined.");
+                    throw new Error("Array is null or undefined.");
                 var args     = slice(arguments),
                     elements = this.length >>> 0;
 
                 memo = memo || first(this);
 
                 if (!elements && !memo)
-                    throw new TypeError("Array is empty and no start value was provided.");
+                    throw new Error("Array is empty and no start value was provided.");
                 else
                     this.forEach(function(o, i, coll) {
                         memo = accumulator.call(null, memo, o, i, coll);
@@ -358,15 +385,16 @@
     function isType(x) {
         var args = slice(arguments, 1);
         if (!args.length)
-            throw new TypeError('isType requires at least two arguments.');
+            throw new Error('isType requires at least two arguments.');
 
         for (var i = 0; i < args.length; i++) {
+            var y = typeof args[i] === 'string' ? args[i].toUpperCase() : getType(args[i]);
+
             if (x === undefined && (y === 'undefined' || y === undefined))
                 return true;
             else if (x === null && (y === 'null' || y === null))
                 return true;
             else {
-                var y = typeof y === 'string' ? y.toUpperCase() : getType(y);
                 if (getType(x) === y)
                     return true;
             }
@@ -539,14 +567,9 @@
      */
     exports.format = format;
     function format(s) {
-        var interpolate = function(args) {
-            console.log(arguments);
-            if (isType(args, type.regex) || isType(args, type.string)) {
-                // If this function was called with an array of parameters instead of individual parameters
-                // then we need to use that array as our arguments array instead of the arguments object
-                if (2 === args.length && isType(first(args), type.array)) {
-                    args = first(args);
-                }
+        function interpolate(s, args) {
+            if (isType(s, type.regex) || isType(s, type.string)) {
+
                 // The pattern to match for interpolation variables
                 var interpolated, interpolationPattern = /#\{[\d]+\}|#\{[\w-_]+\}/g;
                 // An array of strings that were split by matching on the interpolation pattern
@@ -555,21 +578,20 @@
                 var flags, regex;
 
                 if (isType(s, type.regex)) {
-                  // Get the array of matches for flags, and use
-                  // shift to remove the pattern match element
-                  flags = /.+\/([gim]+)?$/.exec(string.toString());
-                  flags.shift();
-                  // Get the raw pattern without the js jive
-                  regex = /^\/(.+)\/[gim]+?$/.exec(string.toString());
-                  regex.shift();
+                    // Get the array of matches for flags, and use
+                    // shift to remove the pattern match element
+                    flags = /.+\/([gim]+)?$/.exec(s.toString());
+                    flags.shift();
+                    // Get the raw pattern without the js jive
+                    regex = /^\/(.+)\/[gim]+?$/.exec(s.toString());
+                    regex.shift();
 
-                  // We're assuming that to reach this point, this is a valid regexp,
-                  // so regex will always contain one element, which is the raw pattern
-                  interpolated = regex[0];
+                    // We're assuming that to reach this point, this is a valid regexp,
+                    // so regex will always contain one element, which is the raw pattern
+                    interpolated = regex[0];
                 }
                 else {
-                    // Remove string parameter from arguments and use it as our interpolation target
-                    interpolated = args.shift();
+                    interpolated = s;
                 }
 
                 if (args.length) {
@@ -577,17 +599,17 @@
                     // the same index value (minus one to account for the string var istelf).
                     // So: interpolate("Hello, #{0}. #{1}", 'Paul', "It's nice to meet you.") will
                     // render "Hello, Paul. It's nice to meet you."
-                    matches = interpolated.split(interpolationPattern);
+                    matches = interpolationPattern.test(interpolated) ? interpolated.match(interpolationPattern).length : 0;
 
-                    if ((matches.length - 1) === (args.length)) {
+                    if (matches === args.length) {
                         // There was an argument supplied for all interpolations
                         interpolated = doReplace(interpolated, args);
                     }
-                    else if ((matches.length - 1) < (args.length)) {
+                    else if (matches < args.length) {
                         // There were more arguments supplied than interpolations
                         interpolated = doReplace(interpolated, args);
                     }
-                    else if ((matches.length - 1) > (args.length)) {
+                    else if (matches > args.length) {
                         // There were fewer arguments supplied than interpolations
                         var memo = args[args.length - 1];
                         // Replace the provided arguments
@@ -597,49 +619,39 @@
                     }
                 }
 
-                if (typeof string === 'object' && string.constructor === RegExp) {
-                    return flags ? new RegExp(interpolated, flags) : new RegExp(interpolated);
-                }
-                else {
-                  return interpolated;
-                }
+                return interpolated;
             }
             else {
-                throw new TypeError('Invalid type passed as interpolation target. Must be string or RegExp.');
+                throw new Error('Invalid type passed as interpolation target. Must be string or RegExp.');
             }
 
-        }(slice(arguments, 1));
+        }
 
         // Iterate through the arguments, peforming either an indexed or named interpolation depending on param type
-        function doReplace(target) {
-            var args = first(arguments);
-            var pattern;
-
-            var result = thread(args, [
-                  papply(filter, exists)
-                , papply(each, replacePattern)
-                , papply(reduce, concat)
-            ]);
-
-            each(arr, function (arg, index) {
+        function doReplace(target, replacements) {
+            var result = target;
+            each(replacements, function (arg, index) {
                 if (isType(arg, type.object)) {
                     for (var key in arg) {
-                        pattern = new RegExp('#\\{' + key + '\\}', 'g');
-                        target = target.replace(pattern, arg[key]);
+                        var pattern = new RegExp('#\\{' + key + '\\}', 'g');
+                        result = result.replace(pattern, arg[key]);
                     }
                 }
                 else {
-                    pattern = new RegExp('#\\{' + index + '\\}', 'g');
-                    target = target.replace(pattern, arg.toString());
+                    var pattern = new RegExp('#\\{' + index + '\\}', 'g');
+                    result = result.replace(pattern, arg.toString());
                 }
             });
+            return result;
         }
 
         // Replace all instances of #{[\d]+}
         function doReplaceAll(target, replace) {
-            target = target.replace(interpolationPattern, replace.toString());
-            return target;
+            var result = target.replace(interpolationPattern, replace.toString());
+            return result;
         }
+
+        return interpolate(s, slice(arguments, 1));
     }
 
 
@@ -678,7 +690,7 @@
     exports.randomN = randomN;
     function randomN(n) {
         return (
-            Math.random().toString(16) + "00000000"
+            Math.random().toString(8) + "00000000"
         ).slice(2, 2 + n).toUpperCase();
     }
 
@@ -757,7 +769,7 @@
     exports.iterate = iterate;
     function iterate(generator, fn) {
         if (!(generator.constructor && generator.constructor.name === 'Generator'))
-            throw new TypeError('Cannot call iterate on any class but Generator.');
+            throw new Error('Cannot call iterate on any class but Generator.');
         var r = generator.next();
         while (r.constructor && r.constructor.name !== 'StopIteration') {
             fn(r);
@@ -770,9 +782,9 @@
     function any(collection, predicate) { 
         console.log('any:', arguments, getType(predicate), getType(type.function), isType(predicate, type.function));
         if (!isType(predicate, type.function))
-            throw new TypeError("any: predicate is not callable.");
+            throw new Error("any: predicate is not callable.");
         if (!isType(collection, type.array, type.object))
-            throw new TypeError("any: collection provided is not an enumerable object.");
+            throw new Error("any: collection provided is not an enumerable object.");
 
         var result = false;
         iterate(new Generator(collection), function (element) {
@@ -787,9 +799,9 @@
     exports.all = all;
     function all(collection, predicate) {
         if (!isType(predicate, type.function))
-            throw new TypeError("all: predicate is not callable.");
+            throw new Error("all: predicate is not callable.");
         if (!isType(collection, type.array, type.object))
-            throw new TypeError("all: collection provided is not an enumerable object.");
+            throw new Error("all: collection provided is not an enumerable object.");
 
         var result = true;
         iterate(new Generator(collection), function (element) {
@@ -924,7 +936,7 @@
         var raw = fn.toString();
         // If fn is a native function, letvars will not work, so throw an explanation
         if (raw.indexOf('[native code]') !== -1) {
-            throw new TypeError('letvars cannot be called with a native function');
+            throw new Error('letvars cannot be called with a native function');
         }
         // Define the replacement regex for injecting our variable declarations
         var definition = /^(function)(.*)\{([\^]*)\}/;
@@ -938,7 +950,7 @@
         // 
         // Create a new function which wraps our modified function, 
         // and call it using the current context.
-        if (definition.test(raw)) throw new TypeError(format('fn does not match the expected function signature: #{ raw }'));
+        if (definition.test(raw)) throw new Error(format('fn does not match the expected function signature: #{ raw }'));
         return Function(raw.replace(definition, inject))().call(this);
     }
 
@@ -953,7 +965,7 @@
     function juxt() {
         var fns = slice(arguments);
         if (!fns.length)
-            throw new TypeError('juxt requires at least one argument.');
+            throw new Error('juxt requires at least one argument.');
 
         return function () {
             var args = slice(arguments);
@@ -970,6 +982,34 @@
         fn, converting to an array if it is not one already. If there are more
         functions, inserts the first result as the last item in second fn, etc..
      ****/
+    exports.thread = thread;
+    function thread(x, fns) {
+        if (fns.length) {
+            return reduce(fns, function(result, fn) {
+                return fn.apply(null, [ result ]);
+            }, x);
+        }
+        else return x;
+    }
+
+    /**
+     *  Curry allows you to compose two functions into one monolithic function.
+     *  The arguments to the final function are applied from right to left.
+     *  
+     *  Example:
+     *      curry(f, g)(2) => f(g(2))
+     */
+    exports.curry = curry;
+    function curry(f, g) {
+        if (f && g) {
+            return function() {
+                var args   = slice(arguments);
+                var result = g.apply(null, args);
+                return f.apply(null, [ result ]);
+            };
+        }
+        else throw new Error('Curry only accepts two functions.');
+    }
 
     /************
     def
@@ -1131,115 +1171,124 @@
     }
 
 
-    /**
-     *  @module toolbox.logging
-     */
-    exports.logging = {
-        Types: {}
-    };
+    exports.logging = {};
 
-    function Logger() {
-        this.level = Level.all;
-        var appender = (root.console && root.console.log) || function () {};
-
-        this.log = function(level) {
-            var args = slice(arguments, 1);
-            if (level.gte(this.level)) {
-                each(args, function(arg) {
-                    if (typeof arg === 'string')
-                        appender(format('#{0}: #{1} - #{2}', new Date(), level.level, arg));
-                    else if (arg instanceof Exception)
-                        appender(arg);
-                    else if (arg instanceof Error)
-                        appender(format('#{0}: #{1} - #{2}', new Date(), level.level, prettifyException(arg)));
-                    else
-                        appender(format('#{0}: #{1}:')); appender(arg);
-                });
-            }
-        };
-    }
-
-    Logger.prototype = {
-        debug: function() {
-            this.log.apply(this, Level.debug, slice(arguments));
-        },
-
-        info: function() {
-            this.log.apply(this, Level.info, slice(arguments));
-            this.log(Level.info, arguments);
-        },
-
-        warn: function() {
-            this.log.apply(this, Level.warn, slice(arguments));
-            this.log(Level.WARN, arguments);
-        },
-
-        error: function() {
-            this.log.apply(this, Level.error, slice(arguments));
-        }
-    };
-
-    this.logging.Types.Logger = Logger;
-
-    /**
-     *  Handles logging level functionality
-     */
-    function Level(level, name) {
-        this.level = level;
-        this.name = name;
-    }
-
-    Level.prototype = {
-        toString: function() {
-            return this.name;
-        },
-        eq: function(level) {
-            return this.level === level.level;
-        },
-        gte: function(level) {
-            return this.level >= level.level;
-        }
-    };
-
-    this.logging.Types.Level = Level;
-    // Define static log levels
-    this.logging.Levels = extend({}, {
+    var Levels = {
           all:   new Level(0, 'all')
         , debug: new Level(1, 'debug')
         , info:  new Level(2, 'info')
         , warn:  new Level(3, 'warn')
         , error: new Level(4, 'error')
         , none:  new Level(5, 'none')
-    });
-    var logger = this.logging.logger = new Logger();
+    };
 
+    /**
+     *  Predefined logging levels
+     *  @static
+     */
+    exports.logging.Levels = Levels;
 
-    function getExceptionMessage(ex) {
-        return ex.message || ex.description || String(ex);
-    }
+    function Logger() {
+        this.level = Levels.all;
 
-    function getFileName(url) {
-        return url.substr(Math.max(url.lastIndexOf('/'), url.lastIndexOf('\\')) + 1);
-    }
-
-    function prettifyException(ex) {
-        if (ex) {
-            var e = format('Exception: #{0}', getExceptionMessage(ex));
-            if (ex.lineNumber) {
-                e = format('#{0} on line: #{1}', e, ex.lineNumber);
-            }
-            if (ex.fileName) {
-                e = format('#{0} in file: #{1}', e, ex.fileName);
-            }
-            if (ex.stack) {
-                e = format('#{e}#{newline}Stack Trace:#{newline}#{stack}', { e: e, newline: string.newline, stack: ex.stack });
-            }
-
-            return e;
+        function _log(message) {
+            if (root.console && root.console.log)
+                console.log(message);
         }
 
-        return 'N/A';
+        function _dir(obj) {
+            if (root.console && root.console.dir)
+                console.dir(obj);
+            else if (JSON !== null && JSON !== undefined)
+                _log(JSON.stringify(obj));
+        }
+
+        this.log = function(level) {
+            var args = slice(arguments, 1);
+            if (level.gte(this.level)) {
+                each(args, function(arg) {
+                    if (typeof arg === 'string')
+                        _log(format('#{0}: #{1} - #{2}', new Date(), level.name, arg));
+                    else if (arg instanceof Exception)
+                        _log(arg);
+                    else if (arg instanceof Error)
+                        _log(format('#{0}: #{1} - #{2}', new Date(), level.name, prettifyException(arg)));
+                    else
+                        _dir(arg);
+                });
+            }
+
+            function prettifyException(ex) {
+                var exceptionMessage = ex.message || ex.description || String(ex);
+
+                if (ex) {
+                    var e = format('Exception: #{0}', exceptionMessage);
+                    if (ex.lineNumber) {
+                        e = format('#{0} on line: #{1}', e, ex.lineNumber);
+                    }
+                    if (ex.fileName) {
+                        e = format('#{0} in file: #{1}', e, ex.fileName);
+                    }
+                    if (ex.stack) {
+                        e = format('#{e}#{newline}Stack Trace:#{newline}#{stack}', { e: e, newline: string.newline, stack: ex.stack });
+                    }
+
+                    return e;
+                }
+
+                return 'N/A';
+            }
+
+            function getFileName(url) {
+                return url.substr(Math.max(url.lastIndexOf('/'), url.lastIndexOf('\\')) + 1);
+            }
+        };
     }
+
+    Logger.prototype.debug = function() {
+        var args = concat(Levels.debug, slice(arguments));
+        this.log.apply(this, args);
+    };
+
+    Logger.prototype.info = function() {
+        this.log.apply(this, Levels.info, slice(arguments));
+    };
+
+    Logger.prototype.warn = function() {
+        this.log.apply(this, Levels.warn, slice(arguments));
+    };
+
+    Logger.prototype.error = function() {
+        this.log.apply(this, Levels.error, slice(arguments));
+    };
+
+    /**
+     *  Defines a logging level, and provides facilities for displaying and comparing them
+     *  @constructor
+     */
+    exports.logging.Level = Level;
+    function Level(level, name) {
+        this.level = level;
+        this.name = name;
+    }
+    Level.prototype.toString = function() {
+        return this.name;
+    };
+    Level.prototype.eq = function(level) {
+        return this.level === level.level;
+    };
+    Level.prototype.gte = function(level) {
+        return this.level >= level.level;
+    };
+
+    /**
+     *  The core logging object. Provides static methods for logging
+     *  both messages and objects. If a browser (like IE), doesn't support
+     *  displaying objects in the console, but does support JSON, the object
+     *  is rendered as a JSON string.
+     */
+    exports.log = new Logger();
+
 
     return exports;
 });
