@@ -1,6 +1,7 @@
-// Enumerable is wrapped up as a module, for compatibility across
-// vanilla browser environments, AMD module loaders, and CommonJS
-// module based environments (such as Node.js).
+/**
+ * @module toolbox.enumerable
+ * @author Paul Schoenfelder
+ */
 (function (root, initializer, undefined) {
     if (typeof exports === 'object') {
         // CommonJS Native

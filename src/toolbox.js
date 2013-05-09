@@ -1,31 +1,28 @@
-// The toolbox is wrapped up as a module, for compatibility across
-// vanilla browser environments, AMD module loaders, and CommonJS
-// module based environments (such as Node.js).
+/**
+ * @module toolbox
+ * @author Paul Schoenfelder
+ */
 (function (root, builder, undefined) {
-    // the toolbox namespace object
-    var ns = {};
-
     if (typeof exports === 'object') {
         // CommonJS Native
-        exports = builder.call(ns, root, false, builder);
+        exports = builder(root, exports, false, builder);
     }
     if (typeof define === 'function') {
         // CommonJS AMD
-        define(builder.call(ns, root, false, builder));
-    } 
+        define(builder(root, {}, false, builder));
+    }
     else {
         // Vanilla environments (browser)
-        root.$toolbox = builder.call(ns, root, false, builder);
+        root.$toolbox = builer(root, {}, false, builder);
     }
 
-})(this, function (root, config, builder, undefined) {
-    
-    
+})(this, function (root, exports, config, builder, undefined) {
+
+
+    // Shortcut to the console
     var console = root.console;
 
-    /*******************
-    Constants
-     ****/ 
+    // Hash of all the types and their typeof results
     var type = {
           function:  'function'
         , object:    'object'
@@ -39,10 +36,8 @@
         , null:      'null'
         , undefined: 'undefined'
     };
-    
-    /********************
-    Convenience Objects
-     ****/
+
+    // Convenience string utilities
     var string = {
           empty: ''
         , newline: '\r\n'
@@ -50,19 +45,20 @@
             return String.prototype.trim.call(str);
         }
     };
-    
-/*
-################################################
-Pre-Requisites
-    These are functions and objects that must be initialized before the
-    module can be run.
-################################################
-*/
 
-    /*******************
-    getType
-        Get the type string for the provided object.
-     ****/
+
+    // Create shorthand refrences to exported functions
+    // for usage inside this builder function
+    var getType
+        , each
+        , reduce
+        , filter = null;
+
+    /** 
+     *  Get the type string for the provided object. Calls to this function are memoized.
+     *  @param {object} obj - The object whose type we want to inspect
+     */
+    exports.getType = getType = memoize(_getType);
     function _getType(obj) {
         if (typeof obj === 'undefined')
             return type.undefined.toUpperCase();
@@ -73,18 +69,17 @@ Pre-Requisites
         else
             return Object.prototype.toString.call(obj).toUpperCase();
     }
-    var getType = this.getType = memoize(_getType);
 
-     
-    /*************
-    each(iterator:fn, context:object) 
-        Call a function for each element in an enumerable object
-        Use native forEach if available or implement ECMA262 5th Edition implementation
 
-        Parameters:
-            iterator: the function to call on each element
-            context: bind 'this' for the iterator to this object
-     ****/
+    /**
+     *  Call a function for each element in an enumerable object. Use native forEach if available or fallback on ECMA262 5th Edition implementation
+     *  @param {function} iterator - The function to call on each element
+     *  @param {object} context - Bind the provided object as 'this' for the iterator function
+     */
+    exports.each = each = (function() {
+        var _each = Array.prototype.forEach || ecma262ForEach;
+        return function (collection, iterator, context) { return _each.call(collection, iterator, context); };
+    })();
     function ecma262ForEach(iterator, context) {
             if (!this)
                 throw new TypeError("Array is null or undefined.");
@@ -103,17 +98,15 @@ Pre-Requisites
             index++;
         }
     }
-    var each = this.each = (function () {
-        var _each = Array.prototype.forEach || ecma262ForEach;
-        return function (collection, iterator, context) { return _each.call(collection, iterator, context); };
-    })();
 
 
-    /*********************
-    reduce
-        Reduce a collection to a single value, by applying elements left to right until only one is left
-     ****/
-    var reduce = this.reduce = (function() {
+    /**
+     *  Reduce a collection to a single value, by applying elements left to right until only one is left
+     *  @param {Array} collection - The collection to reduce
+     *  @param {function} accumulator - The function which will reduce the last value and the current value
+     *  @param {object} memo - The object which will accumulate the final result to be returned
+     */
+    exports.reduce = reduce = (function() {
         var _reduce = Array.prototype.reduce || (function() {
             Array.prototype.reduce = function (accumulator, memo) {
 
@@ -121,7 +114,7 @@ Pre-Requisites
                     throw new TypeError("Array is null or undefined.");
                 var args     = slice(arguments),
                     elements = this.length >>> 0;
-                    
+
                 memo = memo || first(this);
 
                 if (!elements && !memo)
@@ -132,20 +125,22 @@ Pre-Requisites
                     });
 
                 return memo;
-                    
+
             };
-            
+
             return Array.prototype.reduce;
         })();
 
         return function (c, acc, memo) { return _reduce.call(c, acc, memo); };
     })();
 
-    /*********************
-    filter
-        Remove elements from a collection that do not pass the predicate
-     ****/
-    var filter = this.filter = (function() {
+    /**
+     *  Remove elements from a collection that do not pass the predicate
+     *  @param {Array} collection - The collection to filter
+     *  @param {function} predicate - The predicate function takes (in this order), the item to check, the index of the item, and the entire collection
+     *  @param {object} context - The context to execute the filter in
+     */
+    exports.filter = filter = (function() {
         var _filter = Array.prototype.filter || (function() {
             Array.prototype.filter = function (predicate, context) {
 
@@ -161,44 +156,25 @@ Pre-Requisites
                 });
                 return result;
             };
-            
+
             return Array.prototype.filter;
         })();
 
         return function (c, pred, ctx) { return _filter.call(c, pred, ctx); };
     })();
-    
-    
-    /*******************
-     Configuration
-       A null or undefined configuration object assumes the most restrictive defaults. This is to prevent someone who simply
-       forgot to call configure with proper settings from throwing a wrench in their application. Configuration is completely
-       optional, but recommended to get the most out of the library.
-       
-     config === true || config === false
-       This is an all or nothing configuration setting. It's mostly for those who want everything, but don't want to clutter up
-       code by setting all the config values explicitly.
-       
-     config === object
-       When passed an object for configuration, all unspecified options are defaulted to false. To enable or change the default for an
-       option, you need to explicitly set it.
-       
-       ===============================
-       Configurable Options
-       
-       extendPrototypes: 
-            Enables extension of system prototypes with new features. This option only applies to features which do not alter the behavior of those classes.
-       enableModules: 
-            Loads curl.js for AMD module loading. Applies only to browsers.
-     **/
+
+
+    // The default configuration (everything disabled)
     var defaultConfig = {
-            extendPrototypes: false,
-            enableModules:    false
-        },
-        enabledConfig = reduce(Object.keys(defaultConfig), function (obj, key) { 
-            obj[key] = true;
-            return obj;
-        }, {});
+        extendPrototypes: false,
+        enableModules:    false
+    };
+    // The "give-me-everything" config (everything enabled)
+    var enabledConfig = reduce(Object.keys(defaultConfig), function (obj, key) {
+        obj[key] = true;
+        return obj;
+    }, {});
+    // Choose which config to use based on the value given to the builder function
     switch (getType(config)) {
         case type.null:
         case type.undefined:
@@ -209,59 +185,79 @@ Pre-Requisites
             config = enabledConfig;
             break;
     }
-    
-    /**************
-    configure(config:object):void
-        Re-configure the toolbox
-     ****/
+
+    /**
+     *  Re-configure the toolbox.
+     *
+     *  A null or undefined configuration object assumes the most restrictive defaults. This is to prevent someone who simply
+     *  forgot to call configure with proper settings from throwing a wrench in their application. Configuration is completely
+     *  optional, but recommended to get the most out of the library.
+     * 
+     *  `config === true || config === false`
+     *
+     *     This is an all or nothing configuration setting. It's mostly for those who want everything, but don't want to clutter up
+     *     code by setting all the config values explicitly.
+     *     
+     *  `config === object`
+     *
+     *     When passed an object for configuration, all unspecified options are defaulted to false. To enable or change the default for an
+     *     option, you need to explicitly set it.
+     *     
+     *  **Configurable Options**
+     *     
+     *  extendPrototypes: 
+     *      Enables extension of system prototypes with new features. This option only applies to features which do not alter the behavior of those classes.
+     *
+     *  enableModules: 
+     *      Loads curl.js for AMD module loading. Applies only to browsers.
+     *
+     *  @param {object} config - Either true/false or an object that defines the configuration values desired
+     */
+    exports.configure = configure;
     function configure(config) {
         builder.call(this, config, builder);
     }
-    this.configure = configure;
 
-    /*******************
-    config():object
-        Retreive the current configuration object. Read-only.
-     ****/
+    /**
+     *  Retreive the current configuration object. Read-only.
+     */
+    exports.config = getConfig;
     function getConfig() {
         return config;
     }
-    this.config = getConfig;
-    
-    /*******************
-    Exception
-        Log an exception message and print exception info
-        Returns an error object to throw.
-     ****/
+
+    /**
+     *  Creates a new exception
+     *  @constructor
+     */
+    exports.Exception = Exception;
     function Exception(message, context) {
         this.info = context;
         this.message = message;
 
         return this;
     }
+    /** Get the exception message as a string */
     Exception.prototype.toString = function () {
         return 'Exception: ' + this.message;
     };
-    this.Exception = Exception;
-    
-    
-/*
-##################################################
-OBJECTS
-##################################################
-*/
 
-    /***********************
-    eq
-        Ripped from Underscore.js with small modifications.
-        Internal recursive comparison function for `areEqual`.
-     ****/
+    /**
+     *  Perform a deep comparison to check if two objects are equal.
+     *
+     *  The guts of this function are basically ripped straight from Underscore.js
+     *  with small modifications. Internal recursive comparison function for `areEqual`
+     */
+    exports.areEqual = areEqual;
+    function areEqual(a, b) {
+        return eq(a, b, [], []);
+    }
     function eq(a, b, aStack, bStack) {
         // Identical objects are equal. `0 === -0`, but they aren't identical.
         // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
         if (a === b) return a !== 0 || 1 / a == 1 / b;
         // A strict comparison is necessary because `null == undefined`.
-        if (a == null || b == null) return a === b;
+        if (a === null || b === null) return a === b;
         // Compare types
         if (isType(a, b)) return false;
         switch (getType(a)) {
@@ -273,7 +269,7 @@ OBJECTS
             case '[object Number]':
                 // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
                 // other numeric values.
-                return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+                return a !== +a ? b !== +b : (a === 0 ? 1 / a === 1 / b : a === +b);
             case '[object Date]':
             case '[object Boolean]':
                 // Coerce dates and booleans to numeric primitive values. Dates are compared by their
@@ -342,30 +338,25 @@ OBJECTS
         return result;
     }
 
-    /*******************
-    isEqual
-        Perform a deep comparison to check if two objects are equal.
-     ****/
-    function areEqual(a, b) {
-        return eq(a, b, [], []);
-    };
-    this.areEqual = areEqual;
 
-    /*******************
-    isType
-       Determine if the first object is of the same type as the second object.
-       Alternatively, you can pass in a string representing the name of the type
-       you are comparing for. A few examples
-            isType({}, Object.prototype) ==> true
-            isType(obj, undefined)       ==> true
-            isType(5, 'number')          ==> true
-       IMPORTANT: Referencing constructors instead of the prototype for the object
-       you are comparing against will fail! Remember, constructors are of type Function.
-       Example: Object == [object Function] and Object.prototype == [object Object]
-     ***/
+
+    /**
+     *  Determine if the first object is of the same type as the second object.
+     *  Alternatively, you can pass in a string representing the name of the type
+     *  you are comparing for. A few examples
+     *
+     *      `isType({}, Object.prototype) ==> true`
+     *      `isType(obj, undefined)       ==> true`
+     *      `isType(5, 'number')          ==> true`
+     *
+     *  **IMPORTANT**: Referencing constructors instead of the prototype for the object
+     *  you are comparing against will fail! Remember, constructors are of type Function.
+     *  Example: `Object == [object Function]` and `Object.prototype == [object Object]`
+     */
+    exports.isType = isType;
     function isType(x) {
         var args = slice(arguments, 1);
-        if (!args.length) 
+        if (!args.length)
             throw new TypeError('isType requires at least two arguments.');
 
         for (var i = 0; i < args.length; i++) {
@@ -379,28 +370,29 @@ OBJECTS
                     return true;
             }
         }
-        
+
         return false;
     }
-    this.isType = isType;
-    
-    /*******************
-    exists
+
+    /**
         Determine if an object is null or undefined
-     ****/
+        @param {object} obj - The object in question
+     */
+    exports.exists = exists;
     function exists(obj) {
         return !isType(obj, type.null, type.undefined);
     }
-    this.exists = exists;
 
-    /*******************
-    has
+    /**
         Determine if an object has it's own property with the provided name
-     ****/
+        @param {object} obj - The object to check
+        @param {string} name - The property name to look up
+     */
+    exports.has = has;
     function has(obj, name) {
         if (!exists(obj))
             throw new Exception('$toolbox.has: Object does not exist.', arguments);
-            
+
         // If no property name is provided, return all property names which this object owns
         if (!exists(name)) {
             return reduce(Object.keys(obj), function(result, key) {
@@ -417,18 +409,14 @@ OBJECTS
                 return false;
         }
     }
-    this.has = has;
-    
-    /**************
-    mixin
-        Safely extend the toolbox, obviously not required, but it's the recommended path
 
-        Parameters:
-            $me:  The object to mix into
-            $you: The objext we're mixing
-            blacklist: A list of function names that cannot be mixed over
+    /**
+     *  Safely extend the toolbox, obviously not required, but it's the recommended path
+     *  @param {object} $me - The object to mix into
+     *  @param {object} $you - The objext we're mixing
+     *  @param {Array} blacklist - A list of function names that cannot be mixed over
      ****/
-    // Creates an entirely new object with the properties of both $me and $you
+    exports.mixin = mixin;
     function mixin($me, $you, blacklist) {
         // Make sure that if we're mixing into the toolbox, certain properties cannot be overwritten
         if (this === $me)
@@ -441,7 +429,6 @@ OBJECTS
 
         each(valid, function(name) { $me[name] = $you[name]; });
     }
-    this.mixin = mixin;
 
     /***************
     extend
