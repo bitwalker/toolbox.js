@@ -750,7 +750,7 @@
     exports.randomN = randomN;
     function randomN(n) {
         return (
-            Math.random().toString(8) + "00000000"
+            Math.random().toString(16) + "00000000"
         ).slice(2, 2 + n).toUpperCase();
     }
 
