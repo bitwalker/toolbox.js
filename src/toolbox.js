@@ -839,7 +839,14 @@
     }
     /** Returns only the unique elements from the provided collection */
     exports.unique = unique;
-    function unique (c) { return reject(papply(contains, c), concat([], slice(arguments))); }
+    function unique (c) {
+        var result = [];
+        each(c, function(item) {
+            if (!contains(result, item))
+                result.push(item);
+        });
+        return result;
+    }
     /** Returns the union of N collections */
     exports.union = union;
     function union  ()     {
