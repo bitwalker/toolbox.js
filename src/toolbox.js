@@ -816,7 +816,7 @@
     function concat ()     { return Array.prototype.concat.apply([], slice(arguments)); }
     /**  Push N arguments onto the provided array (immutable) */
     exports.push = push;
-    function push   (c)    { return concat(c, slice(arguments)); }
+    function push   (c)    { return concat(c, slice(arguments, 1)); }
     /**  Cons two items into a new collection */
     exports.cons = cons;
     function cons   (x, y) { return concat(x, y); }
