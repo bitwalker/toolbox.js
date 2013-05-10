@@ -540,6 +540,29 @@
     }
 
     /**
+     *  Return all of an object's own properties that are not functions
+     */
+    exports.properties = properties;
+    function properties(obj) {
+        var props = [];
+
+        for (var key in obj) {
+            if (has(obj, key) && !isFunction(obj, key)) {
+                var createGet = function(k) { return bind(function() { return this[k]; }, obj); };
+                var createSet = function(k) { return bind(function(value) { this[k] = value; }, obj); };
+                var prop = {
+                      name: key
+                    , get: createGet(key)
+                    , set: createSet(key)
+                };
+                props.push(prop);
+            }
+        }
+
+        return props;
+    }
+
+    /**
      *  Pick the value associated with the specified property for
      *  each object in an array of objects.
      */
