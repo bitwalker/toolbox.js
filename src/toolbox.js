@@ -242,7 +242,7 @@
      */
     exports.configure = configure;
     function configure(config) {
-        builder.call(this, config, builder);
+        return builder.call(this, config, builder);
     }
 
     /**
