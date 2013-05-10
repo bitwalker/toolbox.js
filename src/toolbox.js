@@ -850,8 +850,9 @@
     /** Returns the union of N collections */
     exports.union = union;
     function union  ()     {
-        return reduce(slice(arguments), function (result, item) {
-            return cons(result, unique(result, item));
+        return reduce(slice(arguments), function (result, collection) {
+            var unioned = cons(result, collection);
+            return unique(unioned);
         }, []);
     }
 
