@@ -801,7 +801,7 @@
      */
     exports.uuid = uuid;
     function uuid() {
-        return randomN(8) + "-" + randomN(4) + "-4" + randomN(3) + "-" + randomN(8) + randomN(4);
+        return randomHex(8) + "-" + randomHex(4) + "-4" + randomHex(3) + "-" + randomHex(8) + randomHex(4);
     }
 
 
