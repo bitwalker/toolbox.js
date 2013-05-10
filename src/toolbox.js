@@ -414,6 +414,16 @@
     }
 
     /**
+     *  Determine if the provided string is empty
+     *  @param (string) s - The string to test
+     */
+    exports.empty = empty;
+    function empty(s) {
+        var emptyPattern = /[\S]+/g;
+        return !exists(s) || !emptyPattern.test(s);
+    }
+
+    /**
         Determine if an object has it's own property with the provided name
         @param {object} obj - The object to check
         @param {string} name - The property name to look up
