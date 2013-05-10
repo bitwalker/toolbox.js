@@ -742,16 +742,50 @@
     }
 
     /**
-     *  Generates up to 8 random digits in the upper-case hexadecimal alphabet
-     *  digits beyond 8 chars in length are backfilled with zeros
-     *
-     *  @param {int} n - A number between 1-8 that defines the length of the returned string
+     * Repeats the provided string n-times. Returns a new string.
      */
-    exports.randomN = randomN;
-    function randomN(n) {
-        return (
-            Math.random().toString(16) + "00000000"
-        ).slice(2, 2 + n).toUpperCase();
+    exports.repeat = repeat;
+    function repeat(str, n) {
+        n = n || 1;
+
+        if (!isType(str, 'string'))
+            throw new Exception('repeat: str must be a string.');
+        if (!isType(n, 'number'))
+            throw new Exception('repeat: n must be a number.');
+
+        var result = str;
+        for (var i = 1; i < n; i++) {
+            result = result + str;
+        }
+
+        return result;
+    }
+
+    /**
+     * Generate a string of N random digits
+     */
+    exports.randomDigits = randomDigits;
+    function randomDigits(limit) {
+        limit = limit || 32;
+        var result = '';
+        while (result.length < limit) {
+            result = result + Math.random().toString(10).slice(2);
+        }
+        return result.slice(0, limit);
+    }
+
+    /**
+     *  Generates a string of N random hexadecimal characters
+     *  @param {int} limit - The length of the string to return
+     */
+    exports.randomHex = randomHex;
+    function randomHex(limit) {
+        limit = limit || 32;
+        var result = '';
+        while (result.length < limit) {
+            result = result + Math.random().toString(16).slice(2);
+        }
+        return result.slice(0, limit);
     }
 
     /**
