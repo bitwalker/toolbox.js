@@ -581,14 +581,33 @@
      *  one arg, returns the concatenation of the str values of the args.
      */
     exports.str = str;
-    function str() {
+    function str(seperator) {
         var args = slice(arguments);
-        return reduce(args, function (memo, arg) {
-            console.log(memo, arg);
-            if (!exists(arg)) return memo + '';
-            if (isType(arg.toString, 'function')) return memo + arg.toString();
-            else return memo + Object.prototype.toString.call(arg);
-        }, '');
+        // If no seperator was provided, the first argument should be part of the result
+        if (!isType(seperator, 'string')) {
+            seperator = null;
+        } else {
+            args = slice(args, 1);
+        }
+
+        if (args.length) {
+            return reduce(args, function (memo, arg) {
+                var append = '';
+                // Reduce an array to a string
+                if (isType(arg, 'array'))
+                    append = reduce(arg, function(m, a) { return m + a.toString(); }, '');
+                else if (exists(arg.toString))
+                    append = arg.toString();
+                else
+                    append = Object.prototype.toString.call(arg);
+
+                if (empty(memo))
+                    return append;
+                else if (exists(seperator))
+                    return memo + seperator + append;
+                else return memo + append;
+            }, '');
+        } else return '';
     }
 
     /**
