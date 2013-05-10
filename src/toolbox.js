@@ -264,6 +264,7 @@
 
         return this;
     }
+    Exception.prototype = Error.prototype;
     /** Get the exception message as a string */
     Exception.prototype.toString = function () {
         return 'Exception: ' + this.message;
