@@ -451,23 +451,26 @@
     }
 
     /**
-     *  Safely extend the toolbox, obviously not required, but it's the recommended path
+     *  Safely extend the toolbox, or another object
      *  @param {object} $me - The object to mix into
      *  @param {object} $you - The objext we're mixing
      *  @param {Array} blacklist - A list of function names that cannot be mixed over
      ****/
     exports.mixin = mixin;
-    function mixin($me, $you, blacklist) {
+    function mixin(target, source, blacklist) {
         // Make sure that if we're mixing into the toolbox, certain properties cannot be overwritten
-        if (this === $me)
+        if (this === target)
             blacklist = union(['configure', 'config'], blacklist);
 
-        var blacklisted = papply(contains, blacklist || []);
-        // Ignore all functions that are blacklisted by name
-        var functionNames = pick(functions($you), 'name');
-        var valid = reject(papply(contains, blacklisted), functionNames);
+        var isBlacklisted = papply(contains, blacklist || []);
+        // Ignore all functions/properties that are blacklisted by name
+        var functionNames = pick(functions(source), 'name');
+        var propertyNames = pick(properties(source), 'name');
+        var valid = reject(isBlacklisted, concat(functionNames, propertyNames));
 
-        each(valid, function(name) { $me[name] = $you[name]; });
+        each(valid, function(name) { target[name] = source[name]; });
+
+        return target;
     }
 
     /**
