@@ -525,13 +525,14 @@
         var funcs = [];
 
         for (var key in obj) {
-            if (isFunction(obj, key)) {
+            if (has(obj, key) && isFunction(obj, key)) {
+                var createExecutor = function(k) { return bind(obj[k], obj); };
                 var func = {
                       name: key
-                    , fn: bind(obj[key], obj)
+                    , fn: createExecutor(key)
                     , arguments: obj[key].length
                 };
-                push(func, funcs);
+                funcs.push(func);
             }
         }
 
