@@ -62,13 +62,13 @@
     exports.getType = getType = memoize(_getType);
     function _getType(obj) {
         if (typeof obj === 'undefined')
-            return type.undefined.toUpperCase();
+            return type.undefined;
         else if (obj === null)
-            return type.null.toUpperCase();
+            return type.null;
         else if (obj.constructor && obj.constructor.name)
-            return obj.constructor.name.toUpperCase();
+            return obj.constructor.name.toLowerCase();
         else
-            return Object.prototype.toString.call(obj).toUpperCase();
+            return Object.prototype.toString.call(obj).toLowerCase();
     }
 
 
@@ -388,7 +388,7 @@
             throw new Error('isType requires at least two arguments.');
 
         for (var i = 0; i < args.length; i++) {
-            var y = typeof args[i] === 'string' ? args[i].toUpperCase() : getType(args[i]);
+            var y = typeof args[i] === 'string' ? args[i] : getType(args[i]);
 
             if (x === undefined && (y === 'undefined' || y === undefined))
                 return true;
