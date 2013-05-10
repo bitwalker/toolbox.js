@@ -942,10 +942,8 @@
      */
     exports.bind = bind;
     function bind(fn, context) {
-        var args = slice(arguments, 2);
-
         return function () {
-            return fn.call(context, concat(args, slice(arguments)));
+            return fn.apply(context, slice(arguments));
         };
     }
 
