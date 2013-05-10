@@ -840,7 +840,6 @@
     /** Check if a collection contains at least one element matching the predicate */
     exports.any = any;
     function any(collection, predicate) { 
-        console.log('any:', arguments, getType(predicate), getType(type.function), isType(predicate, type.function));
         if (!isType(predicate, type.function))
             throw new Error("any: predicate is not callable.");
         if (!isType(collection, type.array, type.object))
