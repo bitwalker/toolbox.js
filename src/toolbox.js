@@ -479,20 +479,23 @@
      *  have it's value set for that property on the resulting object.
      */
     exports.extend = extend;
-    function extend($me) {
-        var extensions = slice(arguments, 1);
+    function extend(target) {
+        if (this === target)
+            throw new Exception('extend: Cannot extend toolbox. Use mixin instead.', this);
 
+        var extensions = slice(arguments, 1);
         if (extensions.length)
         {
             each(extensions, function(extension) {
-                var properties = has(extension);
-                each(properties, function(prop) {
-                    $me[prop] = extension[prop];
+                var functions  = pick(functions(extension), 'name');
+                var properties = pick(properties(extension), 'name');
+                each(concat(functions, properties), function(prop) {
+                    target[prop] = extension[prop];
                 });
             });
         }
 
-        return $me;
+        return target;
     }
 
     /**
