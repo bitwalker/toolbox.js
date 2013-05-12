@@ -57,5 +57,31 @@ vows.describe('Toolbox').addBatch({
             assert.equal(results[1].index, 1);
             assert.deepEqual(results[1].all, [1, 2, 3]);
         }
+    },
+    "map": {
+        'iterates over a collection with the element, its index, and the contents of the whole collection at each step': function() {
+            var results = [];
+            toolbox.map([1, 2, 3], function(n, idx, all) {
+                results.push({
+                    number: n,
+                    index: idx,
+                    all: all
+                });
+            });
+            assert.equal(results.length, 3);
+            assert.equal(results[1].number, 2);
+            assert.equal(results[1].index, 1);
+            assert.deepEqual(results[1].all, [1, 2, 3]);
+        },
+        'returns a new list of the mapped values when completed, leaving the original untouched': function() {
+            var test = [1, 2, 3];
+            var mapped = toolbox.map(test, function(n) {
+                return n * 2;
+            });
+            assert.isArray(mapped);
+            assert.equal(mapped.length, 3);
+            assert.deepEqual(mapped, [2, 4, 6]);
+            assert.deepEqual(test, [1, 2, 3]);
+        }
     }
 }).export(module);
