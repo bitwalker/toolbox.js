@@ -13,7 +13,7 @@
     }
     else {
         // Vanilla environments (browser)
-        root.$toolbox = builder(root, {}, false, builder);
+        root.toolbox = builder(root, {}, false, builder);
     }
 
 })(this, function (root, exports, config, builder, undefined) {
