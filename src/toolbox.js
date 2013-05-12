@@ -1349,6 +1349,20 @@
         };
     }
 
+    /**
+     *  Delay execution of a function by a given number of milliseconds
+     *  @param {function} fn - The function to delay
+     *  @param {number} ms - Number of milliseconds to delay (defaults to 100)
+     */
+    exports.delay = delay;
+    function delay(fn, ms) {
+        var timeout = null;
+        timeout = setTimeout(function() {
+            fn();
+            clearTimeout(timeout);
+            timeout = null;
+        }, exists(ms) ? ms : 100);
+    }
 
     exports.logging = {};
 
