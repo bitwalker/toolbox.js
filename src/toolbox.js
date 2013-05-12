@@ -73,18 +73,18 @@
     })();
     function ecma262ForEach(iterator, context) {
             if (!this)
-                throw new Error("Array is null or undefined.");
+                throw new Exception('each: Array is null or undefined.', arguments);
             if (!isType(iterator, 'function'))
-                throw new Error("Iterator is not callable.");
+                throw new Exception('each: Iterator is not callable.', arguments);
 
-        var o     = Object(this);
-        var len   = o.length >>> 0; // Force o.length to int
-        var index = 0;
+        var collection = Object(this);
+        var len        = o.length >>> 0; // Force o.length to int
+        var index      = 0;
         context = context || null;
         while (index < len) {
             if (has(o, index)) {
                 var val = o[index];
-                iterator.call(context, val, index, o);
+                iterator.call(context, val, index, collection);
             }
             index++;
         }
@@ -97,23 +97,18 @@
      */
     exports.map = map = (function() {
         var _map = Array.prototype.map || (function() {
-            Array.prototype.map = function (c, fn) {
-                if (!this)
-                    throw new Error('Array is null or undefined');
-                if (!fn)
-                    throw new Error('Mapping function is null or undefined.');
-
-                var result = [];
-                this.forEach(function(o, i, coll) {
-                    result.push(fn.call(null, o, i, coll));
+            Array.prototype.map = function (fn) {
+                var results = [];
+                each(this, function(element, index, all) {
+                    results.push(iterator.call(null, element, index, all));
                 });
-                return result;
+                return results;
             };
 
             return Array.prototype.map;
         })();
 
-        return function(c, fn) { return _map.call(c, fn); };
+        return function(collection, fn) { return _map.call(collection, fn); };
     })();
 
 
@@ -125,28 +120,21 @@
      */
     exports.reduce = reduce = (function() {
         var _reduce = Array.prototype.reduce || (function() {
-            Array.prototype.reduce = function (accumulator, memo) {
+            Array.prototype.reduce = function (accumulator, initialValue) {
+                if (!initialValue)
+                    throw new Exception("No initial value was provided.", arguments);
 
-                if (!this)
-                    throw new Error("Array is null or undefined.");
-                var args     = slice(arguments),
-                    elements = this.length >>> 0;
-
-                if (!elements && !memo)
-                    throw new Error("Array is empty and no start value was provided.");
-                else
-                    this.forEach(function(o, i, coll) {
-                        memo = accumulator.call(null, memo, o, i, coll);
-                    });
-
-                return memo;
-
+                var result = initialValue;
+                each(this, function(element, index, all) {
+                     result = accumulator.call(null, result, element, index, all);
+                });
+                return result;
             };
 
             return Array.prototype.reduce;
         })();
 
-        return function (c, acc, memo) { return _reduce.call(c, acc, memo); };
+        return function (collection, accumulator, initialValue) { return _reduce.call(collection, accumulator, initialValue); };
     })();
 
     /**
@@ -159,23 +147,21 @@
         var _filter = Array.prototype.filter || (function() {
             Array.prototype.filter = function (predicate, context) {
 
-                if (!this)
-                    throw new Exception("Array is null or undefined.", { context: this, args: arguments });
                 if (typeof predicate !== 'function')
-                    throw new Exception("Predicate is not callable.", { context: this, args: arguments });
+                    throw new Exception("Predicate is not callable.", arguments);
 
-                var result = [];
-                each(this, function (item, index, collection) {
-                    if (predicate.call(context, item, index, collection))
-                        result.push(item);
+                var results = [];
+                each(this, function (element, index, all) {
+                    if (predicate.call(context, element, index, all))
+                        results.push(element);
                 });
-                return result;
+                return results;
             };
 
             return Array.prototype.filter;
         })();
 
-        return function (c, pred, ctx) { return _filter.call(c, pred, ctx); };
+        return function (collection, predicate, context) { return _filter.call(collection, predicate, context); };
     })();
 
 
