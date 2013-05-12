@@ -63,7 +63,7 @@
      *  Get the type string for the provided object. Calls to this function are memoized.
      *  @param {object} obj - The object whose type we want to inspect
      */
-    exports.getType = getType = memoize(_getType);
+    exports.getType = getType = _getType;
     function _getType(obj) {
         if (typeof obj === 'undefined')
             return type.undefined;
