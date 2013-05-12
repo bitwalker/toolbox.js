@@ -1073,53 +1073,61 @@
     }
 
     /**
-    defmulti(dispatcher, missing, [fn, [fn1, [..]]])
-        Define a function which dispatches to one or more functions, depending on arguments.
-        Parameters:
-            dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
-                        needs to return the value to dispatch on. See the example below.
-            $default:   The default method to run if no functions can be found to dispatch
-            fnX:        Function descriptors (objects with a name (string), and fn (function) property)
-     
-      Example:
-
-            var dispatcher = function (config) { 
-                return { dispatch: config.environment }; 
-            };
-            // default doesn't require a descriptor object because no lookups need to
-            // be performed to determine whether or not to call it.
-            var default = function (config, query) {
-                var repository = new Repository(new MemoryContext(config.logLevel));
-                return query.execute(repository);
-            };
-            // All dispatched methods however require a descriptor { name, fn }.
-            // Name is used to match against the dispatcher objects 'dispatch' value
-            var sql = {
-                name: 'MSSQL',
-                fn: function (config, query) {
-                    try {
-                        var connection = new Connection(config.connectionString);
-                        var context = new SQLContext(connection, config.logLevel);
-                        var repository = new Repository(context);
-                        // Assume query.execute returns a Deferred object
-                        return query.execute(repository).then(context.closeConnection);
-                    } catch (ex) { 
-                        // handle
-                    }
-                }
-            };
-            var test = {
-                // Set up a test environment to run code against
-            };
-
-            // The API is simple, and encourages reusable components where possible
-            var executeQuery = defmulti(dispatcher, default, sql, test);
-            // Make your exposed API even more succinct using partial application!
-            var dbConfig = { environment: 'test' };
-            var queryDb = papply(executeQuery, dbConfig);
-
-            // No more conditionals scattered all over your code!!
-            queryDb('SELECT * FROM NONSENSE WHERE PHRASE IN ("pies", "gerg")');
+     *  defmulti(dispatcher, missing, [fn, [fn1, [..]]])
+     *      Define a function which dispatches to one or more functions, depending on arguments.
+     *      Parameters:
+     *          dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
+     *                      needs to return the value to dispatch on. See the example below.
+     *          $default:   The default method to run if no functions can be found to dispatch
+     *          fnX:        Function descriptors (objects with a name (string), and fn (function) property)
+     *
+     *  Example:
+     *
+     *      var dispatcher = function (config) { 
+     *          return { dispatch: config.environment }; 
+     *      };
+     *
+     *  default doesn't require a descriptor object because no lookups need to
+     *  be performed to determine whether or not to call it.
+     *
+     *      var default = function (config, query) {
+     *          var repository = new Repository(new MemoryContext(config.logLevel));
+     *          return query.execute(repository);
+     *      };
+     *
+     *  All dispatched methods however require a descriptor { name, fn }.
+     *  Name is used to match against the dispatcher objects 'dispatch' value
+     *
+     *      var sql = {
+     *          name: 'MSSQL',
+     *          fn: function (config, query) {
+     *              try {
+     *                  var connection = new Connection(config.connectionString);
+     *                  var context = new SQLContext(connection, config.logLevel);
+     *                  var repository = new Repository(context);
+     *                  // Assume query.execute returns a Deferred object
+     *                  return query.execute(repository).then(context.closeConnection);
+     *              } catch (ex) { 
+     *                  // handle
+     *              }
+     *          }
+     *      };
+     *      var test = {
+     *          // Set up a test environment to run code against
+     *      };
+     *
+     *  The API is simple, and encourages reusable components where possible
+     *
+     *      var executeQuery = defmulti(dispatcher, default, sql, test);
+     *
+     *  Make your exposed API even more succinct using partial application!
+     *
+     *      var dbConfig = { environment: 'test' };
+     *      var queryDb = papply(executeQuery, dbConfig);
+     *
+     *  No more conditionals scattered all over your code!!
+     *
+     *      queryDb('SELECT * FROM NONSENSE WHERE PHRASE IN ("pies", "gerg")');
      */
     exports.defmulti = defmulti;
     function defmulti (dispatcher, $default) {
