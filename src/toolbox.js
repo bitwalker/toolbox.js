@@ -840,7 +840,7 @@
     function last   (c)    { var result = c[c.length-1]; return result; }
     /** Return the first N elements of the provided collection */
     exports.head = head;
-    function head   (c, n) { return slice(c, 0, n); }
+    function head   (c, n) { return slice(c, 0, n || 1); }
     /** Return all but the first element of the provided collection */
     exports.tail = tail;
     function tail   (c)    { return slice(c, 1); }
@@ -871,101 +871,200 @@
     /** Rejects any elements from the provided collection which match the predicate */
     exports.reject = reject;
     function reject(predicate, collection) {
-        var result = [];
-        iterate(new Generator(collection), function (element) {
+        return reduce(collection, function(result, element) {
             if (!predicate(element))
                 result.push(element);
-        });
-        return result;
+            return result;
+        }, []);
     }
 
     /** Check if a collection contains at least one element matching the predicate */
     exports.any = any;
-    function any(collection, predicate) { 
-        if (!isType(predicate, type.function))
-            throw new Error("any: predicate is not callable.");
-        if (!isType(collection, type.array, type.object))
-            throw new Error("any: collection provided is not an enumerable object.");
+    function any(collection, predicate) {
+        if (!isType(predicate, 'function'))
+            throw new Exception("any: predicate is not callable.");
+        if (!isType(collection, 'array', 'object'))
+            throw new Exception("any: collection provided is not an enumerable object.");
 
-        var result = false;
-        iterate(new Generator(collection), function (element) {
-            if (predicate(element))
-                result = true;
-        });
-
-        return result;
+        return reduce(collection, function(result, element) {
+            if (result) return true;
+            else return predicate(element);
+        }, false);
     }
 
     /** Check if all elements of a collection pass a truth test */
     exports.all = all;
     function all(collection, predicate) {
-        if (!isType(predicate, type.function))
-            throw new Error("all: predicate is not callable.");
-        if (!isType(collection, type.array, type.object))
-            throw new Error("all: collection provided is not an enumerable object.");
+        if (!isType(predicate, 'function'))
+            throw new Exception("all: predicate is not callable.");
+        if (!isType(collection, 'array', 'object'))
+            throw new Exception("all: collection provided is not an enumerable object.");
 
-        var result = true;
-        iterate(new Generator(collection), function (element) {
-            if (!predicate(element))
-                result = false;
-        });
+        return reduce(collection, function(result, element) {
+            if (result) return predicate(element);
+            else return false;
+        }, true);
+    }
 
+    /**
+     *  Zip together the contents of two collections. The provided zipper function
+     *  should take two arguments, and produce either a single element, or an array.
+     *  If no zipper function is provided, the default behavior is to alternate elements
+     *  between the first and second collections until there are no elements left. If
+     *  one of the collections is of longer length than the other, whatever is left will
+     *  be concatenated on to the end of the result.
+     *  @param {array} first - The first collection to zip
+     *  @param {array} seoncd - The second collection to zip
+     *  @param {function} zipper - The zipper function: (a, b) => [ab, ab] || ab
+     */
+    exports.zip = zip;
+    function zip(first, second, zipper) {
+        if (first.length === 0) return second;
+        if (second.length === 0) return first;
+        if (!exists(zipper)) {
+            zipper = function(a, b) {
+                return cons(a, b);
+            };
+        }
+
+        var heads = zipper(head(first), head(second));
+        var tails = zip(tail(first), tail(second), zipper);
+        return concat(heads, tails);
+    }
+
+    /**
+     *  Sum the elements of a collection
+     *  @param {array} collection - The collection to sum
+     */
+    exports.sum = sum;
+    function sum(collection) {
+        return reduce(collection, function(result, element) {
+            return result + element;
+        }, 0);
+    }
+
+    /**
+     * Take N elements from a collection
+     * @param {array} collection - The collection to take from
+     * @param {number} num - The number of elements to take
+     */
+    exports.take = take;
+    function take(collection, num) {
+        if (num > collection.length) {
+            return collection;
+        } else {
+            var results = [];
+            for (var i = 0; i < num; i++) {
+                results.push(collection[i]);
+            }
+            return results;
+        }
+    }
+
+    /**
+     *  Drop N elements from a collection
+     *  @param {array} collection - The collection to drop from
+     *  @param {number} num - The number of elements to drop
+     */
+    exports.drop = drop;
+    function drop(collection, num) {
+        if (num > collection.length) {
+            return [];
+        } else {
+            var result = collection;
+            for (var i = 0; i < num; i++) {
+                result.shift();
+            }
+            return result;
+        }
+    }
+
+    /**
+     *  Create an array of numbers that are included in the provided range.
+     *  @param {number} low - The low end of the range (inclusive)
+     *  @param {number} high - The high end of the range (inclusive)
+     */
+    exports.range = range;
+    function range(low, high) {
+        if (!exists(low) && !exists(high)) {
+            return [];
+        }
+        if (!exists(high)) {
+            high = low;
+            low = 0;
+        }
+        var result = [];
+        for (var i = low; i <= high; i++) {
+            result.push(i);
+        }
         return result;
     }
 
 
     /**
-        Acts as a lazy iterator over a collection (array or object)
-        or alternatively, can be used to fetch values from a function
-        to produce an infinite sequence. In the latter case, the function
-        will be passed the last produced value, beginning with a provided
-        seed value, or null if one was not provided.
-
-        @constructor
-        @param {array|object|function} collection - The collection or function to generate values from
-        @param {any} seed - The first value to send to the generator function
+     *  Generates a value from a function using a provided seed value.
+     *  Every subsequent call to `next` uses the last generated value
+     *  as the new seed. This can be used to generate an infinite sequence
+     *  which can be iterated over using `next` as if it was a regular
+     *  enumerable like an array.
+     *  @constructor
+     *  @param {function} generator - The generating function
+     *  @param {any} seed - The first value to send to the generator function
      */
     exports.Generator = Generator;
-    function Generator(collection, seed) {
-        if (!exists(collection))
+    function Generator(generator, seed) {
+        if (!exists(generator) || !isType(generator, 'function'))
+            throw new Exception('Generator: generator function must be a function.');
+
+        // Set the seed to null if it is not initialized
+        if (!exists(seed)) seed = null;
+        // Store the last value produced
+        var last = seed;
+        this.next = function () {
+            last = generator.call(null, last);
+            return last;
+        };
+        this.take = function(n) {
+            var results = [];
+            while (results.length < n) {
+                results.push(this.next());
+            }
+            return results;
+        };
+        this.drop = function(n) {
+            var count = 0;
+            while (count < n) {
+                this.next();
+            }
+        };
+    }
+
+    /**
+     *  Acts as a lazy iterator over a collection (array or object).
+     *  @constructor
+     *  @param {array|object} collection - The collection to enumerate
+     */
+    function Enumerator(collection) {
+        if (!exists(collection) || !isType(collection, 'array', 'object'))
             collection = [];
 
-        if (isType(collection, 'array') || isType(collection, 'object')) {
-            var keys = Object.keys(collection);
-            this.next = function () {
-                if (keys.length !== 0) {
-                    return collection[keys.shift()];
-                }
-                else {
-                    throw new StopIterationException();
-                }
-            };
-            this.iterate = function(fn) {
-                if (!exists(fn) || !isType(fn, 'function'))
-                    throw new Exception('Generator: Must provide a function to iterate.');
-
-                try {
-                    fn(this.next());
-                } catch (StopIterationException) { /* Swallow it */ }
-            };
-        }
-        else if (isType(collection, 'function')) {
-            // Set the seed to null if it is not initialized
-            if (!exists(seed)) seed = null;
-            // Store the last value produced
-            var last = seed;
-            this.next = function () {
-                last = collection(last);
-                return last;
-            };
-            this.iterate = function(fn) {
-                throw new Exception('Generator: Cannot call iterate on an infinite sequence.');
-            };
-        }
-        else {
-            throw new Exception('Generator: Invalid collection type, must be a function or an array.');
-        }
+        var keys = Object.keys(collection);
+        this.next = function () {
+            if (keys.length !== 0) {
+                return collection[keys.shift()];
+            }
+            else {
+                throw new StopIterationException();
+            }
+        };
+        this.reset = function() {
+            keys = Object.keys(collection);
+        };
+        this.count = function() {
+            return Object.keys(collection).length;
+        };
     }
+
 
     /**
      *  An empty function that does nothing.
