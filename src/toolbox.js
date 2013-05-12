@@ -21,7 +21,7 @@
     /**
      * Print the current library version
      */
-    exports.version = '1.2.0';
+    exports.version = '1.2.1';
 
     // Shortcut to the console
     var console = root.console || {};
