@@ -18,6 +18,10 @@
 
 })(this, function (root, exports, config, builder, undefined) {
 
+    /**
+     * Print the current library version
+     */
+    exports.version = '1.1.0';
 
     // Shortcut to the console
     var console = root.console || {};
