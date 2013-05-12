@@ -1044,14 +1044,26 @@
         };
     }
 
-    /************
+    /**
+     *  Returns a function which takes the same arguments and performs the same action, 
+     *  but returns the opposite truth value of the provided function.
+     */
+    exports.complement = complement;
+    function complement(fn) {
+        return function() {
+            return !fn.apply(null, slice(arguments));
+        };
+    }
+
+    /**
     thread
-        Threads x through each fn. Inserts x as the last parameter in the first
+        Threads x through each fn. Applies x as the only parameter to the first
         fn, converting to an array if it is not one already. If there are more
-        functions, inserts the first result as the last item in second fn, etc..
+        functions, inserts the first result as the parameter for the second fn, etc..
      ****/
     exports.thread = thread;
-    function thread(x, fns) {
+    function thread(x) {
+        var fns = slice(arguments, 1);
         if (fns.length) {
             return reduce(fns, function(result, fn) {
                 return fn.apply(null, [ result ]);
