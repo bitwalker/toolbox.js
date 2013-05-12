@@ -34,6 +34,11 @@
             return String.prototype.trim.call(str);
         }
     };
+    /**
+     *  Useful string values/functions
+     *  @module
+     */
+    exports.string = string;
 
 
     // Create shorthand refrences to exported functions
