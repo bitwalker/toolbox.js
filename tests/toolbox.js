@@ -107,5 +107,30 @@ vows.describe('Toolbox').addBatch({
             assert.equal(results[2].index, 2);
             assert.deepEqual(results[1].all, [1, 2, 3]);
         }
+    },
+    "filter": {
+        'filters results in a new collection of elements that passed the provided predicate': function() {
+            var test = [1, 2, 3];
+            var odds = toolbox.filter(test, function(n) { return n % 2 !== 0; });
+            assert.isArray(odds);
+            assert.deepEqual(odds, [1, 3]);
+            assert.deepEqual(test, [1, 2, 3]);
+        },
+        'iterates over the collection with the element, its index, and the whole collection at each step': function() {
+            var results = [];
+            toolbox.filter([1, 2, 3], function(n, idx, all) {
+                results.push({
+                    number: n,
+                    index: idx,
+                    all: all
+                });
+                return true;
+            });
+            assert.equal(results.length, 3);
+            assert.equal(results[1].number, 2);
+            assert.equal(results[1].index, 1);
+            assert.deepEqual(results[1].all, [1, 2, 3]);
+        }
+    },
     }
 }).export(module);
