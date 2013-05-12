@@ -43,22 +43,18 @@
 
     // Create shorthand refrences to exported functions
     // for usage inside this builder function
-    var getType
-        , each
-        , map
-        , reduce
-        , filter = null;
+    var each, map, reduce, filter;
 
     /** 
      *  Get the type string for the provided object. Calls to this function are memoized.
      *  @param {object} obj - The object whose type we want to inspect
      */
-    exports.getType = getType = _getType;
-    function _getType(obj) {
+    exports.getType = getType;
+    function getType(obj) {
         if (typeof obj === 'undefined')
-            return type.undefined;
+            return 'undefined';
         else if (obj === null)
-            return type.null;
+            return 'null';
         else if (obj.constructor && obj.constructor.name)
             return obj.constructor.name.toLowerCase();
         else
