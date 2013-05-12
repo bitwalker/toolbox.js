@@ -59,6 +59,25 @@
         var emptyPattern = /[\S]+/g;
         return !exists(s) || !emptyPattern.test(s);
     }
+    /**
+     * Repeats the provided string n-times. Returns a new string.
+     */
+    exports.string.repeat = repeatString;
+    function repeatString(str, n) {
+        n = n || 1;
+
+        if (!isType(str, 'string'))
+            throw new Exception('repeat: str must be a string.');
+        if (!isType(n, 'number'))
+            throw new Exception('repeat: n must be a number.');
+
+        var result = str;
+        for (var i = 1; i < n; i++) {
+            result = result + str;
+        }
+
+        return result;
+    }
 
 
     // Create shorthand refrences to exported functions
@@ -752,25 +771,7 @@
         return collected.toString().replace(/[,]/g, '');
     }
 
-    /**
-     * Repeats the provided string n-times. Returns a new string.
-     */
-    exports.repeat = repeat;
-    function repeat(str, n) {
-        n = n || 1;
 
-        if (!isType(str, 'string'))
-            throw new Exception('repeat: str must be a string.');
-        if (!isType(n, 'number'))
-            throw new Exception('repeat: n must be a number.');
-
-        var result = str;
-        for (var i = 1; i < n; i++) {
-            result = result + str;
-        }
-
-        return result;
-    }
 
     /**
      * Generate a string of N random digits
