@@ -1166,34 +1166,6 @@
     }
 
     /**
-     *  Takes `f` function and returns wrapper in return, that may be
-     *  used for tail recursive algorithms. Note that returned funciton
-     *  is not side effect free and should not be called from anywhere
-     *  else during tail recursion. In other words if
-     *      `var f = recur(function foo() { ... bar() ... })`
-     *  then `bar should never call `f`. It is ok though for `bar` to 
-     *  call `recur(foo)` instead.
-     */
-    exports.recur = recur;
-    function recur(fn) {
-        var active, nextArgs;
-        return function() {
-            var args, result;
-            nextArgs = arguments;
-            if (!active) {
-                active = true;
-                while (nextArgs) {
-                    args = nextArgs;
-                    nextArgs = null;
-                    result = fn.apply(this, args);
-                }
-                active = false;
-            }
-            return result;
-        };
-    }
-
-    /**
      *  Cache results for a function for calls with identical arguments
      *  Credit to @philogb, @addyosmani, @mathias, and @DmitryBaranovsk 
      */
