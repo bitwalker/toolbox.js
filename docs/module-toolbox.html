@@ -100,6 +100,9 @@
         
             <dt><a href="module-toolbox.Generator.html">Generator</a></dt>
             <dd></dd>
+        
+            <dt><a href="module-toolbox.StopIterationException.html">StopIterationException</a></dt>
+            <dd></dd>
         </dl>
     
     
@@ -147,7 +150,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 858
+        toolbox.js, line 920
     </li></ul></dd>
     
     
@@ -201,7 +204,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 841
+        toolbox.js, line 903
     </li></ul></dd>
     
     
@@ -258,7 +261,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 279
+        toolbox.js, line 307
     </li></ul></dd>
     
     
@@ -317,7 +320,62 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 943
+        toolbox.js, line 998
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="complement"><span class="type-signature">&lt;static> </span>complement<span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Returns a function which takes the same arguments and performs the same action, 
+ but returns the opposite truth value of the provided function.</p>
+    </div>
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        toolbox.js, line 1048
     </li></ul></dd>
     
     
@@ -371,7 +429,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 781
+        toolbox.js, line 847
     </li></ul></dd>
     
     
@@ -425,7 +483,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 251
+        toolbox.js, line 267
     </li></ul></dd>
     
     
@@ -471,8 +529,8 @@ option, you need to explicitly set it.</code></pre>
 <p> extendPrototypes: 
      Enables extension of system prototypes with new features. This option only applies to features which do not alter the behavior of those classes.</p>
 
-<p> enableModules: 
-     Loads curl.js for AMD module loading. Applies only to browsers.</p>
+<p> createGlobalAliases:
+     Creates aliases to exported functions. i.e., <code>$toolbox.each</code> would also have a global <code>each</code> alias.</p>
     </div>
     
     
@@ -501,7 +559,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 243
+        toolbox.js, line 259
     </li></ul></dd>
     
     
@@ -555,7 +613,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 787
+        toolbox.js, line 853
     </li></ul></dd>
     
     
@@ -609,7 +667,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 802
+        toolbox.js, line 868
     </li></ul></dd>
     
     
@@ -667,7 +725,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1059
+        toolbox.js, line 1079
     </li></ul></dd>
     
     
@@ -685,14 +743,67 @@ option, you need to explicitly set it.</code></pre>
         
             
 <dt>
-    <h4 class="name" id="Deferred"><span class="type-signature">&lt;static> </span>Deferred<span class="type-signature"></span></h4>
+    <h4 class="name" id="defmulti"><span class="type-signature">&lt;static> </span>defmulti<span class="type-signature"></span></h4>
     
     
 </dt>
 <dd>
     
     <div class="description">
-        <p>Represents an eventual value returned from the completion of single operation.</p>
+        <p>Define a function which dispatches to one or more functions, depending on arguments.
+ Parameters:
+   dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
+             needs to return the value to dispatch on. See the example below.
+   $default:   The default method to run if no functions can be found to dispatch
+   fnX:        Function descriptors (objects with a name (string), and fn (function) property)</p>
+
+<p> Example:</p>
+
+<pre><code> var dispatcher = function (config) { 
+     return { dispatch: config.environment }; 
+ };</code></pre>
+
+<p> default doesn&#39;t require a descriptor object because no lookups need to
+ be performed to determine whether or not to call it.</p>
+
+<pre><code> var default = function (config, query) {
+     var repository = new Repository(new MemoryContext(config.logLevel));
+     return query.execute(repository);
+ };</code></pre>
+
+<p> All dispatched methods however require a descriptor { name, fn }.
+ Name is used to match against the dispatcher objects &#39;dispatch&#39; value</p>
+
+<pre><code> var sql = {
+     name: &#39;MSSQL&#39;,
+     fn: function (config, query) {
+         try {
+             var connection = new Connection(config.connectionString);
+             var context = new SQLContext(connection, config.logLevel);
+             var repository = new Repository(context);
+             // Assume query.execute returns a Deferred object
+             return query.execute(repository).then(context.closeConnection);
+         } catch (ex) { 
+             // handle
+         }
+     }
+ };
+ var test = {
+     // Set up a test environment to run code against
+ };</code></pre>
+
+<p> The API is simple, and encourages reusable components where possible</p>
+
+<pre><code> var executeQuery = defmulti(dispatcher, default, sql, test);</code></pre>
+
+<p> Make your exposed API even more succinct using partial application!</p>
+
+<pre><code> var dbConfig = { environment: &#39;test&#39; };
+ var queryDb = papply(executeQuery, dbConfig);</code></pre>
+
+<p> No more conditionals scattered all over your code!!</p>
+
+<pre><code> queryDb(&#39;SELECT * FROM NONSENSE WHERE PHRASE IN (&quot;pies&quot;, &quot;gerg&quot;)&#39;);</code></pre>
     </div>
     
     
@@ -721,7 +832,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 902
+        toolbox.js, line 1147
     </li></ul></dd>
     
     
@@ -775,7 +886,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 80
+        toolbox.js, line 84
     </li></ul></dd>
     
     
@@ -829,7 +940,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 420
+        toolbox.js, line 448
     </li></ul></dd>
     
     
@@ -883,7 +994,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 411
+        toolbox.js, line 439
     </li></ul></dd>
     
     
@@ -939,7 +1050,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 481
+        toolbox.js, line 509
     </li></ul></dd>
     
     
@@ -993,7 +1104,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 170
+        toolbox.js, line 174
     </li></ul></dd>
     
     
@@ -1047,7 +1158,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 790
+        toolbox.js, line 856
     </li></ul></dd>
     
     
@@ -1073,18 +1184,20 @@ option, you need to explicitly set it.</code></pre>
     
     <div class="description">
         <p>Returns a new string or RegExp (depending on which one was passed in as target).
- EXAMPLES:
-     stringex.interpolate(&#39;yellow #{0}&#39;, &#39;moon&#39;)    #=&gt; &#39;yellow moon&#39;
-     stringex.interpolate(/^[#{0}]$/g, &#39;\w&#39;)       #=&gt; /^[\w]$/g
-     stringex.interpolate(&#39;My #{0} is #{name}&#39;, &#39;name&#39;, {
-         name: &#39;Paul&#39;
-     })                                             #=&gt; &#39;My name is Paul&#39;
- NOTES:
-     1.) The arguments object is used here to allow for an unlimited number of parameters.
-     2.) You can mix and match interpolation types (named, indexed), but in order to
-         use named variables, you must pass in an object with those names as properties.
-         Objects are ignored for indexing (they will only be used for replacing named variables)
-         so the order of the parameters is important, with Objects being the only exception.</p>
+ EXAMPLES:</p>
+
+<pre><code> stringex.interpolate(&#39;yellow #{0}&#39;, &#39;moon&#39;)    #=&gt; &#39;yellow moon&#39;
+ stringex.interpolate(/^[#{0}]$/g, &#39;\\w&#39;)       #=&gt; /^[\w]$/g
+ stringex.interpolate(&#39;My #{0} is #{name}&#39;, &#39;name&#39;, {
+     name: &#39;Paul&#39;
+ })                                             #=&gt; &#39;My name is Paul&#39;</code></pre>
+
+<p> <strong>NOTES:</strong></p>
+
+<ol><li>The arguments object is used here to allow for an unlimited number of parameters.</li><li>You can mix and match interpolation types (named, indexed), but in order to
+use named variables, you must pass in an object with those names as properties.
+Objects are ignored for indexing (they will only be used for replacing named variables)
+so the order of the parameters is important, with Objects being the only exception.</li></ol>
     </div>
     
     
@@ -1113,7 +1226,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 628
+        toolbox.js, line 659
     </li></ul></dd>
     
     
@@ -1173,7 +1286,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 523
+        toolbox.js, line 551
     </li></ul></dd>
     
     
@@ -1227,7 +1340,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 62
+        toolbox.js, line 66
     </li></ul></dd>
     
     
@@ -1281,7 +1394,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 431
+        toolbox.js, line 459
     </li></ul></dd>
     
     
@@ -1335,7 +1448,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 796
+        toolbox.js, line 862
     </li></ul></dd>
     
     
@@ -1389,7 +1502,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 506
+        toolbox.js, line 534
     </li></ul></dd>
     
     
@@ -1454,61 +1567,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 385
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-    
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="iterate"><span class="type-signature">&lt;static> </span>iterate<span class="type-signature"></span></h4>
-    
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Forces iteration over a generator</p>
-    </div>
-    
-    
-    
-
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 829
+        toolbox.js, line 413
     </li></ul></dd>
     
     
@@ -1562,7 +1621,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 775
+        toolbox.js, line 841
     </li></ul></dd>
     
     
@@ -1620,7 +1679,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1021
+        toolbox.js, line 1029
     </li></ul></dd>
     
     
@@ -1674,165 +1733,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 793
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-    
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="lazydef"><span class="type-signature">&lt;static> </span>lazydef<span class="type-signature"></span></h4>
-    
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Define function &#39;name&#39; (for this example, we&#39;ll use foo) attached to &#39;context&#39; 
- (or &#39;this&#39;, if &#39;context&#39; is not supplied), that when called for the first time
- reassigns itself to a new function which has the result of calling foo captured
- in a closure. Before exiting, it then returns the result of calling foo.</p>
-
-<p> Subsequent calls to foo simply return the result that is stored in it&#39;s closure. 
- This is a fast lookup and efficient especially if the conditionals used in the 
- previous solutions are many and complex.</p>
-
-<p> In essence, this results in a means by which you can define a runtime optimized
- lookup for a function or value. Instead of calling a function which must perform
- potentially expensive evaluation of conditionals or feature detection before returning
- a result, lazydef enables you to perform those computations the first time the function
- is called, and then return the proper result as if the function had been written without
- those comuptations at all!</p>
-
-<p> This is different from memoization, where you want to return the same result for a given 
- set of arguments. lazydef is better used in situations like 1.) a function which satisfies
- one or more conditions after the first call, but must continually evaluate those conditions
- each time the function is called (e.g. a function which has to perform browser feature
- detection prior to returning a result). These extra computations are typically unecessary,
- and could be expensive to perform. 2.) you want to optimize a function which has variable results, 
- but the method by which you get those results is determined at runtime, and is unecessary or
- expensive to evaluate for every call (think browser specific functions for retrieving
- scroll position on a web page).
- Additional Reading: http://michaux.ca/articles/lazy-function-definition-pattern</p>
-
-<p> Example:
-     this.methodFirstCalled = lazydef(&#39;methodFirstCalled&#39;, function() {
-         return new Date();
-     });
-     this.methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
-     ...5 seconds...
-     this.methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
-     ...5 seconds...
-     this.methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)</p>
-    </div>
-    
-    
-    
-
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1222
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-    
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="letvars"><span class="type-signature">&lt;static> </span>letvars<span class="type-signature"></span></h4>
-    
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>This function is the equivalent of the &#39;let&#39; keyword in Clojure. FYI:
- &#39;let&#39; binds values to both existing and new variables for the scope of the
- &#39;let&#39; body. When binding to existing variables, it simply shadows the
- original value with the new. letvars has essentially identical behavior.
- You provide a map ({}) of variable names and the values to bind, and a
- function to execute with those variables available in the body. The function
- will be executed immediately, so use it as you would the original function.</p>
-
-<p> Some additional features based on how this works under the covers:
-     - You can specify expressions as values in the args object using 2 methods,
-     the difference is simply in what scope and at what time the expression is
-     evaluated:
-         1.) As an immediately evaluated expression: 
-             { x: (func() + 3) <em> 4 }
-         2.) As a string which will be evaluated when the function is called:
-             { y: 11, x: &#39;(y + 3) </em> 4&#39; }</p>
-    </div>
-    
-    
-    
-
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 985
+        toolbox.js, line 859
     </li></ul></dd>
     
     
@@ -1889,7 +1790,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1347
+        toolbox.js, line 1377
     </li></ul></dd>
     
     
@@ -1943,7 +1844,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 108
+        toolbox.js, line 112
     </li></ul></dd>
     
     
@@ -1998,7 +1899,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1161
+        toolbox.js, line 1187
     </li></ul></dd>
     
     
@@ -2052,7 +1953,96 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 459
+        toolbox.js, line 487
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="once"><span class="type-signature">&lt;static> </span>once<span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Takes a function and returns a wrapped version of it that will execute the original
+ one time, and then returns that same result on all following calls to it.</p>
+
+<p> Subsequent calls to foo simply return the result that is stored in it&#39;s closure. 
+ This is a fast lookup and efficient especially if the conditionals used in the 
+ previous solutions are many and complex.</p>
+
+<p> In essence, this results in a means by which you can define a runtime optimized
+ lookup for a function or value. Instead of calling a function which must perform
+ potentially expensive evaluation of conditionals or feature detection before returning
+ a result, <code>once</code> enables you to perform those computations the first time the function
+ is called, and then return the proper result as if the function had been written without
+ those comuptations at all!</p>
+
+<p> This is different from memoization, where you want to return the same result for a given 
+ set of arguments. <code>once</code> is better used in situations like: </p>
+
+<ul><li>A function which satisfies one or more conditions after the first call, but must continually 
+evaluate those conditions each time the function is called (e.g. a function which has to 
+perform browser feature detection prior to returning a result). These extra computations are 
+typically unecessary, and could be expensive to perform. </li><li>You want to optimize a function which has variable results, but the method by which you get 
+those results is determined at runtime, and is unecessary or expensive to evaluate for every 
+call (think browser specific functions for retrieving scroll position on a web page).</li></ul>
+
+<p>Example:</p>
+
+<pre><code>var methodFirstCalled = once(function() {
+    return new Date();
+});
+methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+...5 seconds...
+methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+...5 seconds...
+methodFirstCalled() =&gt; Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)</code></pre>
+
+<p> <a href="http://michaux.ca/articles/lazy-function-definition-pattern">Additional Reading</a></p>
+    </div>
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        toolbox.js, line 1250
     </li></ul></dd>
     
     
@@ -2111,7 +2101,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 958
+        toolbox.js, line 1013
     </li></ul></dd>
     
     
@@ -2166,7 +2156,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 569
+        toolbox.js, line 597
     </li></ul></dd>
     
     
@@ -2220,7 +2210,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 545
+        toolbox.js, line 573
     </li></ul></dd>
     
     
@@ -2274,7 +2264,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 784
+        toolbox.js, line 850
     </li></ul></dd>
     
     
@@ -2329,7 +2319,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 724
+        toolbox.js, line 755
     </li></ul></dd>
     
     
@@ -2347,15 +2337,14 @@ option, you need to explicitly set it.</code></pre>
         
             
 <dt>
-    <h4 class="name" id="randomN"><span class="type-signature">&lt;static> </span>randomN<span class="type-signature"></span></h4>
+    <h4 class="name" id="randomDigits"><span class="type-signature">&lt;static> </span>randomDigits<span class="type-signature"></span></h4>
     
     
 </dt>
 <dd>
     
     <div class="description">
-        <p>Generates up to 8 random digits in the upper-case hexadecimal alphabet
- digits beyond 8 chars in length are backfilled with zeros</p>
+        <p>Generate a string of N random digits</p>
     </div>
     
     
@@ -2384,7 +2373,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 750
+        toolbox.js, line 798
     </li></ul></dd>
     
     
@@ -2402,20 +2391,14 @@ option, you need to explicitly set it.</code></pre>
         
             
 <dt>
-    <h4 class="name" id="recur"><span class="type-signature">&lt;static> </span>recur<span class="type-signature"></span></h4>
+    <h4 class="name" id="randomHex"><span class="type-signature">&lt;static> </span>randomHex<span class="type-signature"></span></h4>
     
     
 </dt>
 <dd>
     
     <div class="description">
-        <p>Takes <code>f</code> function and returns wrapper in return, that may be
- used for tail recursive algorithms. Note that returned funciton
- is not side effect free and should not be called from anywhere
- else during tail recursion. In other words if
-     <code>var f = recur(function foo() { ... bar() ... })</code>
- then <code>bar should never call </code>f<code>. It is ok though for </code>bar<code> to 
- call </code>recur(foo)` instead.</p>
+        <p>Generates a string of N random hexadecimal characters</p>
     </div>
     
     
@@ -2444,7 +2427,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1138
+        toolbox.js, line 812
     </li></ul></dd>
     
     
@@ -2498,7 +2481,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 136
+        toolbox.js, line 140
     </li></ul></dd>
     
     
@@ -2552,7 +2535,61 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 818
+        toolbox.js, line 892
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="repeat"><span class="type-signature">&lt;static> </span>repeat<span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Repeats the provided string n-times. Returns a new string.</p>
+    </div>
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        toolbox.js, line 778
     </li></ul></dd>
     
     
@@ -2606,7 +2643,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 778
+        toolbox.js, line 844
     </li></ul></dd>
     
     
@@ -2662,7 +2699,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 583
+        toolbox.js, line 611
     </li></ul></dd>
     
     
@@ -2716,7 +2753,64 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 799
+        toolbox.js, line 865
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="thread"><span class="type-signature">&lt;static> </span>thread<span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>thread
+        Threads x through each fn. Applies x as the only parameter to the first
+        fn, converting to an array if it is not one already. If there are more
+        functions, inserts the first result as the parameter for the second fn, etc..</p>
+    </div>
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        toolbox.js, line 1061
     </li></ul></dd>
     
     
@@ -2770,7 +2864,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 810
+        toolbox.js, line 883
     </li></ul></dd>
     
     
@@ -2824,7 +2918,7 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 807
+        toolbox.js, line 873
     </li></ul></dd>
     
     
@@ -2851,13 +2945,9 @@ option, you need to explicitly set it.</code></pre>
     <div class="description">
         <p>Generates an RFC4122, version 4, UUID</p>
 
-<p> References:
-     http://www.ietf.org/rfc/rfc4122.txt (particularly version 4)
-     https://twitter.com/#!/kriskowal/status/157519149772447744
-     http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
-     http://note19.com/2007/05/27/javascript-guid-generator/
-     http://www.broofa.com/Tools/Math.uuid.js
-     http://www.broofa.com/blog/?p=151</p>
+<p> References:</p>
+
+<ul><li>http://www.ietf.org/rfc/rfc4122.txt (particularly version 4)</li><li>https://twitter.com/#!/kriskowal/status/157519149772447744</li><li>http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript</li><li>http://note19.com/2007/05/27/javascript-guid-generator/</li><li>http://www.broofa.com/Tools/Math.uuid.js</li><li>http://www.broofa.com/blog/?p=151</li></ul>
     </div>
     
     
@@ -2886,7 +2976,61 @@ option, you need to explicitly set it.</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 768
+        toolbox.js, line 834
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="version"><span class="type-signature">&lt;static> </span>version<span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Print the current library version</p>
+    </div>
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        toolbox.js, line 24
     </li></ul></dd>
     
     
@@ -2919,13 +3063,13 @@ option, you need to explicitly set it.</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-toolbox.html">toolbox</a></li><li><a href="enumerable.html">enumerable</a></li></ul><h3>Classes</h3><ul><li><a href="module-toolbox.Exception.html">Exception</a></li><li><a href="module-toolbox.Generator.html">Generator</a></li><li><a href="module-toolbox.logging.Level.html">Level</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-toolbox.html">toolbox</a></li><li><a href="enumerable.html">enumerable</a></li></ul><h3>Classes</h3><ul><li><a href="module-toolbox.Exception.html">Exception</a></li><li><a href="module-toolbox.Generator.html">Generator</a></li><li><a href="module-toolbox.logging.Level.html">Level</a></li><li><a href="module-toolbox.StopIterationException.html">StopIterationException</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Fri May 10 2013 13:28:51 GMT-0500 (CDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Sun May 12 2013 09:13:39 GMT-0500 (CDT)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -641,17 +641,20 @@
     /**
      *  Returns a new string or RegExp (depending on which one was passed in as target).
      *  EXAMPLES:
+     *
      *      stringex.interpolate('yellow #{0}', 'moon')    #=> 'yellow moon'
      *      stringex.interpolate(/^[#{0}]$/g, '\\w')       #=> /^[\w]$/g
      *      stringex.interpolate('My #{0} is #{name}', 'name', {
      *          name: 'Paul'
      *      })                                             #=> 'My name is Paul'
-     *  NOTES:
-     *      1.) The arguments object is used here to allow for an unlimited number of parameters.
-     *      2.) You can mix and match interpolation types (named, indexed), but in order to
-     *          use named variables, you must pass in an object with those names as properties.
-     *          Objects are ignored for indexing (they will only be used for replacing named variables)
-     *          so the order of the parameters is important, with Objects being the only exception.
+     *
+     *  **NOTES:**
+     *
+     *  1. The arguments object is used here to allow for an unlimited number of parameters.
+     *  2. You can mix and match interpolation types (named, indexed), but in order to
+     *     use named variables, you must pass in an object with those names as properties.
+     *     Objects are ignored for indexing (they will only be used for replacing named variables)
+     *     so the order of the parameters is important, with Objects being the only exception.
      */
     exports.format = format;
     function format(s) {
@@ -820,12 +823,13 @@
      *  Generates an RFC4122, version 4, UUID
      *
      *  References:
-     *      http://www.ietf.org/rfc/rfc4122.txt (particularly version 4)
-     *      https://twitter.com/#!/kriskowal/status/157519149772447744
-     *      http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
-     *      http://note19.com/2007/05/27/javascript-guid-generator/
-     *      http://www.broofa.com/Tools/Math.uuid.js
-     *      http://www.broofa.com/blog/?p=151
+     *
+     *  * http://www.ietf.org/rfc/rfc4122.txt (particularly version 4)
+     *  * https://twitter.com/#!/kriskowal/status/157519149772447744
+     *  * http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
+     *  * http://note19.com/2007/05/27/javascript-guid-generator/
+     *  * http://www.broofa.com/Tools/Math.uuid.js
+     *  * http://www.broofa.com/blog/?p=151
      */
     exports.uuid = uuid;
     function uuid() {
@@ -1085,13 +1089,12 @@
     }
 
     /**
-     *  defmulti(dispatcher, missing, [fn, [fn1, [..]]])
-     *      Define a function which dispatches to one or more functions, depending on arguments.
-     *      Parameters:
-     *          dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
-     *                      needs to return the value to dispatch on. See the example below.
-     *          $default:   The default method to run if no functions can be found to dispatch
-     *          fnX:        Function descriptors (objects with a name (string), and fn (function) property)
+     *  Define a function which dispatches to one or more functions, depending on arguments.
+     *  Parameters:
+     *    dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
+     *              needs to return the value to dispatch on. See the example below.
+     *    $default:   The default method to run if no functions can be found to dispatch
+     *    fnX:        Function descriptors (objects with a name (string), and fn (function) property)
      *
      *  Example:
      *
@@ -1215,30 +1218,34 @@
      *  In essence, this results in a means by which you can define a runtime optimized
      *  lookup for a function or value. Instead of calling a function which must perform
      *  potentially expensive evaluation of conditionals or feature detection before returning
-     *  a result, lazydef enables you to perform those computations the first time the function
+     *  a result, `once` enables you to perform those computations the first time the function
      *  is called, and then return the proper result as if the function had been written without
      *  those comuptations at all!
      *
      *  This is different from memoization, where you want to return the same result for a given 
-     *  set of arguments. lazydef is better used in situations like 1.) a function which satisfies
-     *  one or more conditions after the first call, but must continually evaluate those conditions
-     *  each time the function is called (e.g. a function which has to perform browser feature
-     *  detection prior to returning a result). These extra computations are typically unecessary,
-     *  and could be expensive to perform. 2.) you want to optimize a function which has variable results, 
-     *  but the method by which you get those results is determined at runtime, and is unecessary or
-     *  expensive to evaluate for every call (think browser specific functions for retrieving
-     *  scroll position on a web page).
-     *  Additional Reading: http://michaux.ca/articles/lazy-function-definition-pattern
+     *  set of arguments. `once` is better used in situations like: 
      *
-     *  Example:
-     *      this.methodFirstCalled = lazydef('methodFirstCalled', function() {
-     *          return new Date();
-     *      });
-     *      this.methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
-     *      ...5 seconds...
-     *      this.methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
-     *      ...5 seconds...
-     *      this.methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+     *  - A function which satisfies one or more conditions after the first call, but must continually 
+     *    evaluate those conditions each time the function is called (e.g. a function which has to 
+     *    perform browser feature detection prior to returning a result). These extra computations are 
+     *    typically unecessary, and could be expensive to perform. 
+     *  - You want to optimize a function which has variable results, but the method by which you get 
+     *    those results is determined at runtime, and is unecessary or expensive to evaluate for every 
+     *    call (think browser specific functions for retrieving scroll position on a web page).
+     *
+     *
+     * Example:
+     *
+     *     var methodFirstCalled = once(function() {
+     *         return new Date();
+     *     });
+     *     methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+     *     ...5 seconds...
+     *     methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+     *     ...5 seconds...
+     *     methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
+     *
+     *  [Additional Reading](http://michaux.ca/articles/lazy-function-definition-pattern)
      */
     exports.once = once;
     function once(fn) {
