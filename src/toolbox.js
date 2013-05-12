@@ -848,7 +848,7 @@
     /** Returns true of the provided collection contains the given element */
     exports.contains = contains;
     function contains (c, item) {
-        return any(c, function (element) { return item === element; });
+        return any(c, function (element) { return areEqual(item, element); });
     }
     /** Returns only the unique elements from the provided collection */
     exports.unique = unique;
