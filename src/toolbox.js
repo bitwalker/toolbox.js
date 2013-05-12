@@ -21,7 +21,7 @@
     /**
      * Print the current library version
      */
-    exports.version = '1.1.0';
+    exports.version = '1.1.1';
 
     // Shortcut to the console
     var console = root.console || {};
@@ -197,8 +197,8 @@
 
     // The default configuration (everything disabled)
     var defaultConfig = {
-        extendPrototypes: false,
-        enableModules:    false
+        extendPrototypes:    false,
+        createGlobalAliases: false
     };
     // The "give-me-everything" config (everything enabled)
     var enabledConfig = reduce(Object.keys(defaultConfig), function (obj, key) {
@@ -212,8 +212,20 @@
         case type.boolean:
             config = config ? enabledConfig : defaultConfig;
             break;
+        case type.object:
+            // Rewrite config to contain only whitelisted properties,
+            // with defaults pulled from defaultConfig
+            var custom = {};
+            for (var key in defaultConfig) {
+                if (config[key] !== null && config[key] !== undefined)
+                    custom[key] = config[key];
+                else
+                    custom[key] = defaultConfig[key];
+            }
+            config = custom;
+            break;
         default:
-            config = enabledConfig;
+            config = defaultConfig;
             break;
     }
 
@@ -239,14 +251,14 @@
      *  extendPrototypes: 
      *      Enables extension of system prototypes with new features. This option only applies to features which do not alter the behavior of those classes.
      *
-     *  enableModules: 
-     *      Loads curl.js for AMD module loading. Applies only to browsers.
+     *  createGlobalAliases:
+     *      Creates aliases to exported functions. i.e., `$toolbox.each` would also have a global `each` alias.
      *
      *  @param {object} config - Either true/false or an object that defines the configuration values desired
      */
     exports.configure = configure;
     function configure(config) {
-        return builder.call(this, config, builder);
+        return builder.call(null, root, exports, config, builder);
     }
 
     /**
@@ -1356,6 +1368,15 @@
      *  is rendered as a JSON string.
      */
     exports.log = new Logger();
+
+    if (config.createGlobalAliases) {
+        for (var key in exports) {
+            if (!exists(root[key]))
+                root[key] = exports[key];
+            else
+                exports.log.warn('Unable to create global alias for: ' + key + '. One is already defined. Skipping...');
+        }
+    }
 
 
     return exports;
