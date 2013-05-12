@@ -972,6 +972,18 @@
     }
 
     /**
+     *  An empty function that does nothing.
+     */
+    exports.noop = noop;
+    function noop() { }
+
+    /**
+     *  The identity function. Returns it's argument.
+     */
+    exports.identity = identity;
+    function identity(x) { return x; }
+
+    /**
      *  Bind a function context, as well as any arguments you wish to
      *  partially apply. Returns a function that acts like the old one,
      *  but only requires whatever additional arguments you want to call
