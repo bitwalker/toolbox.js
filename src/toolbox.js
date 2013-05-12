@@ -1364,6 +1364,20 @@
         }, exists(ms) ? ms : 100);
     }
 
+    /**
+     *  Repeat execution of a function N times
+     *  @param {function} fn - The function to repeat
+     *  @param {number} n - The number of times to repeat
+     */
+    exports.repeat = repeat;
+    function repeat(fn, n) {
+        var remaining = n;
+        while (remaining > 0) {
+            fn();
+            remaining--;
+        }
+    }
+
     exports.logging = {};
 
     var Levels = {
