@@ -1079,26 +1079,20 @@
         else throw new Error('Curry only accepts two functions.');
     }
 
-    /************
-    def
-        Define a function and provide either one or more objects on which to apply it
-     ****/
-
-    /************
+    /**
     defmulti(dispatcher, missing, [fn, [fn1, [..]]])
-        Define a function which dispatches to one or more functions based on the arguments.
+        Define a function which dispatches to one or more functions, depending on arguments.
         Parameters:
             dispatcher: The function which tells defmulti how to find the data it needs to dispatch properly,
                         needs to return the value to dispatch on. See the example below.
-            missing:    The default method to run if the args signature isn't recognized
-            fnX:        Function descriptors to be dispatched (See FunctionDescriptor class below.)
+            $default:   The default method to run if no functions can be found to dispatch
+            fnX:        Function descriptors (objects with a name (string), and fn (function) property)
      
       Example:
 
             var dispatcher = function (config) { 
-                return { dispatch: config.environment, args: slice(arguments) }; 
+                return { dispatch: config.environment }; 
             };
-            // A good place for some kind of sane default response
             // default doesn't require a descriptor object because no lookups need to
             // be performed to determine whether or not to call it.
             var default = function (config, query) {
@@ -1133,8 +1127,41 @@
 
             // No more conditionals scattered all over your code!!
             queryDb('SELECT * FROM NONSENSE WHERE PHRASE IN ("pies", "gerg")');
-     ****/
-    function defmulti (dispatcher, missing) {
+     */
+    exports.defmulti = defmulti;
+    function defmulti (dispatcher, $default) {
+        if (!isType(dispatcher, 'function'))
+            throw new Exception('defmulti: dispatcher must be a function');
+        if (!isType($default, 'function'))
+            throw new Exception('defmulti: $default must be a function');
+
+        var pool = [];
+        // Validate dispatched functions
+        var definitions = slice(arguments, 2);
+        each(definitions, function(definition) {
+            if (!validateDefinition(definition))
+                throw new Exception('defmulti: Function definition is not valid.', fn);
+            else
+                pool.push(definition);
+        });
+
+        return function() {
+            var args = slice(arguments);
+            var dispatchConfig = dispatcher.apply(null, args);
+
+            if (!isType(dispatchConfig, 'object') || !isType(dispatchConfig.dispatch, 'string'))
+                throw new Exception('defmulti: expected a dispatch configuration object, but was invalid.', dispatchConfig);
+
+            var executing = filter(pool, function(d) { return d.name === dispatchConfig.dispatch; });
+            if (executing.length > 0)
+                each(executing, function(d) { d.fn.apply(null, args); });
+            else
+                $default.apply(null, args);
+        };
+
+        function validateDefinition(definition) {
+            return isType(definition, 'object') && isType(definition.name, 'string') && isType(definition.fn, 'function');
+        }
     }
 
     /**
