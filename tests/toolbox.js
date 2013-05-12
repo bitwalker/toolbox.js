@@ -83,5 +83,29 @@ vows.describe('Toolbox').addBatch({
             assert.deepEqual(mapped, [2, 4, 6]);
             assert.deepEqual(test, [1, 2, 3]);
         }
+    },
+    "reduce": {
+        'reduces a collection to a single value': function() {
+            var test = [1, 2, 3];
+            var reduced = toolbox.reduce(test, function(memo, n) { return memo + n; }, 0);
+            assert.equal(reduced, 6);
+        },
+        'iterates over the collection with the accumulator, the element, its index, and the whole collection at each step': function() {
+            var results = [];
+            toolbox.reduce([1, 2, 3], function(memo, n, idx, all) {
+                results.push({
+                    memo: memo,
+                    number: n,
+                    index: idx,
+                    all: all
+                });
+                return memo + n;
+            }, 0);
+            assert.equal(results.length, 3);
+            assert.equal(results[2].memo, 3);
+            assert.equal(results[2].number, 3);
+            assert.equal(results[2].index, 2);
+            assert.deepEqual(results[1].all, [1, 2, 3]);
+        }
     }
 }).export(module);
