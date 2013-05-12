@@ -255,5 +255,19 @@ vows.describe('Toolbox').addBatch({
             assert.isTrue(toolbox.exists('test'));
             assert.isTrue(toolbox.exists({ test: 5 }));
         }
+    },
+    "has": {
+        topic: function() {
+            return { test: 'stuff' };
+        },
+        'if an object has its own property with the given name, return true': function(obj) {
+            assert.isTrue(toolbox.has(obj, 'test'));
+        },
+        'if an object has a property by that name, but it is inherited, return false': function(obj) {
+            assert.isFalse(toolbox.has(obj, 'keys'));
+        },
+        'if an object does not have a property by that name, return false': function(obj) {
+            assert.isFalse(toolbox.has(obj, 'things'));
+        }
     }
 }).export(module);
