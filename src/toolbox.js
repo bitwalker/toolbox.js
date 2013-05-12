@@ -273,7 +273,7 @@
      */
     exports.Exception = Exception;
     function Exception(message, context) {
-        this.info = context;
+        this.context = context;
         this.message = message;
 
         return this;
