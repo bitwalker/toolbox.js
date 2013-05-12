@@ -883,18 +883,6 @@
         return result;
     }
 
-    /** Forces iteration over a generator */
-    exports.iterate = iterate;
-    function iterate(generator, fn) {
-        if (!(generator.constructor && generator.constructor.name === 'Generator'))
-            throw new Error('Cannot call iterate on any class but Generator.');
-        var r = generator.next();
-        while (r.constructor && r.constructor.name !== 'StopIteration') {
-            fn(r);
-            r = generator.next();
-        }
-    }
-
     /** Check if a collection contains at least one element matching the predicate */
     exports.any = any;
     function any(collection, predicate) { 
@@ -932,63 +920,56 @@
 
     /**
         Acts as a lazy iterator over a collection (array or object)
+        or alternatively, can be used to fetch values from a function
+        to produce an infinite sequence. In the latter case, the function
+        will be passed the last produced value, beginning with a provided
+        seed value, or null if one was not provided.
+
         @constructor
+        @param {array|object|function} collection - The collection or function to generate values from
+        @param {any} seed - The first value to send to the generator function
      */
     exports.Generator = Generator;
-    function Generator(collection) {
-        var keys = Object.keys(collection);
+    function Generator(collection, seed) {
+        if (!exists(collection))
+            collection = [];
 
-        this.next = function () {
-            if (keys.length !== 0) {
-                return collection[keys.shift()];
-            }
-            else {
-                return new StopIteration(); // throw?
-            }
-
-            function StopIteration () {
-                this.name = 'StopIteration';
-                this.message = 'Iteration of the underlying collection has been completed.';
-            }
-            StopIteration.prototype = new Error();
-        };
-    }
-
-    /**
-     * Represents an eventual value returned from the completion of single operation.
-     */
-    exports.Deferred = (function () {
-        var callbacks = [],
-            deferred = {
-                resolve: function (result) { this.complete('resolve', result); },
-                reject:  function (err) { this.complete('reject', err); },
-                then:    function (resolve, reject) { callbacks.push({ resolve: resolve, reject: reject }); },
-                promise: {
-                    then: function safeThen(resolve, reject) {
-                        deferred.then(resolve, reject);
-                        return this;
-                    }
+        if (isType(collection, 'array') || isType(collection, 'object')) {
+            var keys = Object.keys(collection);
+            this.next = function () {
+                if (keys.length !== 0) {
+                    return collection[keys.shift()];
+                }
+                else {
+                    throw new StopIterationException();
                 }
             };
+            this.iterate = function(fn) {
+                if (!exists(fn) || !isType(fn, 'function'))
+                    throw new Exception('Generator: Must provide a function to iterate.');
 
-        function complete (type, result) {
-            deferred.then = type === 'reject'
-                ? function(resolve, reject) { deferred.reject(result); return this; }
-                : function(resolve)         { deferred.resolve(result); return this; };
-
-            deferred.resolve = deferred.reject = function() { throw new Error("Deferred already completed"); };
-
-            each(callbacks, function (callback) {
-                callback[type](result);
-            });
-
-            callbacks = null;
+                try {
+                    fn(this.next());
+                } catch (StopIterationException) { /* Swallow it */ }
+            };
         }
-
-        // Cache deferred object after initial creation
-        return function Deferred() { return promise; };
-    })();
-
+        else if (isType(collection, 'function')) {
+            // Set the seed to null if it is not initialized
+            if (!exists(seed)) seed = null;
+            // Store the last value produced
+            var last = seed;
+            this.next = function () {
+                last = collection(last);
+                return last;
+            };
+            this.iterate = function(fn) {
+                throw new Exception('Generator: Cannot call iterate on an infinite sequence.');
+            };
+        }
+        else {
+            throw new Exception('Generator: Invalid collection type, must be a function or an array.');
+        }
+    }
 
     /**
      *  Bind a function context, as well as any arguments you wish to
