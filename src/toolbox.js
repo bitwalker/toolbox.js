@@ -275,6 +275,18 @@
     };
 
     /**
+     *  Thrown when a Generator reaches the end of it's internal collection.
+     *  @constructor
+     */
+    exports.StopIterationException = StopIterationException;
+    function StopIterationException () {
+        this.message = 'Iteration of the underlying collection has been completed.';
+
+        return this;
+    }
+    StopIterationException.prototype = Exception.prototype;
+
+    /**
      *  Perform a deep comparison to check if two objects are equal.
      *
      *  The guts of this function are basically ripped straight from Underscore.js
