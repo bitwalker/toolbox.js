@@ -146,8 +146,6 @@
                 var args     = slice(arguments),
                     elements = this.length >>> 0;
 
-                memo = memo || first(this);
-
                 if (!elements && !memo)
                     throw new Error("Array is empty and no start value was provided.");
                 else
