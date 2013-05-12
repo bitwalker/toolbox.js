@@ -658,7 +658,7 @@
     exports.format = format;
     function format(s) {
         function interpolate(s, args) {
-            if (isType(s, type.regex) || isType(s, type.string)) {
+            if (isType(s, 'regexp') || isType(s, 'string')) {
 
                 // The pattern to match for interpolation variables
                 var interpolated, interpolationPattern = /#\{[\d]+\}|#\{[\w-_]+\}/g;
@@ -667,7 +667,7 @@
                 // Regular expression parts to be reassembled later
                 var flags, regex;
 
-                if (isType(s, type.regex)) {
+                if (isType(s, 'regexp')) {
                     // Get the array of matches for flags, and use
                     // shift to remove the pattern match element
                     flags = /.+\/([gim]+)?$/.exec(s.toString());
@@ -721,7 +721,7 @@
         function doReplace(target, replacements) {
             var result = target;
             each(replacements, function (arg, index) {
-                if (isType(arg, type.object)) {
+                if (isType(arg, 'object')) {
                     for (var key in arg) {
                         var pattern = new RegExp('#\\{' + key + '\\}', 'g');
                         result = result.replace(pattern, arg[key]);
