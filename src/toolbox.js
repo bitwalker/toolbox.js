@@ -26,19 +26,39 @@
     // Shortcut to the console
     var console = root.console || {};
 
-    // Convenience string utilities
-    var string = {
-          empty: ''
-        , newline: '\r\n'
-        , trim: function (str) {
-            return String.prototype.trim.call(str);
-        }
-    };
     /**
      *  Useful string values/functions
      *  @module
      */
-    exports.string = string;
+    exports.string = {};
+    /**
+     *  An empty string constant
+     *  @constant
+     */
+    exports.string.empty = '';
+    /**
+     *  An empty newline constant
+     *  @constant
+     */
+    exports.string.newline = '\r\n';
+    /**
+     *  Trims a string of whitespace, or the provided string
+     *  @static
+     */
+    exports.string.trim = trim;
+    function trim(s) {
+        return String.prototype.trim.call(str);
+    }
+    /**
+     *  Determine if the provided string is empty
+     *  @param (string) s - The string to test
+     *  @static
+     */
+    exports.string.isEmpty = isEmpty;
+    function isEmpty(s) {
+        var emptyPattern = /[\S]+/g;
+        return !exists(s) || !emptyPattern.test(s);
+    }
 
 
     // Create shorthand refrences to exported functions
@@ -412,16 +432,6 @@
     }
 
     /**
-     *  Determine if the provided string is empty
-     *  @param (string) s - The string to test
-     */
-    exports.empty = empty;
-    function empty(s) {
-        var emptyPattern = /[\S]+/g;
-        return !exists(s) || !emptyPattern.test(s);
-    }
-
-    /**
         Determine if an object has it's own property with the provided name
         @param {object} obj - The object to check
         @param {string} name - The property name to look up
@@ -599,7 +609,7 @@
                 else
                     append = Object.prototype.toString.call(arg);
 
-                if (empty(memo))
+                if (isEmpty(memo))
                     return append;
                 else if (exists(seperator))
                     return memo + seperator + append;
