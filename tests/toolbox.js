@@ -163,5 +163,67 @@ vows.describe('Toolbox').addBatch({
                 assert.equal(ex.message, 'Iteration of the underlying collection has been completed.');
             }
         }
-    }
+    },
+    "areEqual": {
+        'when given primitives, returns proper truth value': function() {
+            assert.isTrue(toolbox.areEqual(null, null));
+            assert.isFalse(toolbox.areEqual(null, undefined));
+            assert.isTrue(toolbox.areEqual(undefined, undefined));
+            assert.isFalse(toolbox.areEqual(undefined, null));
+            assert.isTrue(toolbox.areEqual(1, 1));
+            assert.isFalse(toolbox.areEqual(1, 2));
+            assert.isTrue(toolbox.areEqual('test', 'test'));
+            assert.isFalse(toolbox.areEqual('test', 'pies'));
+            assert.isTrue(toolbox.areEqual(/[\w]+/g, /[\w]+/g));
+            assert.isFalse(toolbox.areEqual(/[\w]+/g, /[\w]+/));
+            assert.isTrue(toolbox.areEqual(new Date(), new Date()));
+            assert.isFalse(toolbox.areEqual(new Date(), new Date(2012, 4, 12)));
+            assert.isTrue(toolbox.areEqual(true, true));
+            assert.isFalse(toolbox.areEqual(false, true));
+        },
+        'when given an array, returns true if elements are the same': function() {
+            assert.isTrue(toolbox.areEqual([1, 2, 3], [1, 2, 3]));
+        },
+        'when given an object, returns true if its properties and values are the same': function() {
+            assert.isTrue(toolbox.areEqual({ test: 1 }, { test: 1 }));
+        },
+        'deep comparisons on object properties are possible': function() {
+            var first = {
+                id: 1,
+                address: {
+                    street: '123 Test',
+                    city: 'Test City',
+                    zip: 12345
+                },
+                friendIds: [2, 3, 4]
+            };
+            var second = {
+                id: 1,
+                address: {
+                    street: '123 Test',
+                    city: 'Test City',
+                    zip: 12345
+                },
+                friendIds: [2, 3, 4]
+            };
+            var third = {
+                id: 1,
+                address: {
+                    street: '123 Test',
+                    city: 'Another City',
+                    zip: 23456
+                }
+            };
+            assert.isTrue(toolbox.areEqual(first, second));
+            assert.isFalse(toolbox.areEqual(second, third));
+        },
+        'deep comparisons on array values are possible': function() {
+            var first = [{ id: 1, data: { test: 'stuff' } }, { id: 1, data: { test: 'stuff' } }];
+            var second = [{ id: 1, data: { test: 'stuff' } }, { id: 1, data: { test: 'stuff' } }];
+            var third = [{ id: 1, data: { test: 'things' } }, { id: 1, data: { test: 'stuff' } }];
+            assert.isTrue(toolbox.areEqual(first, second));
+            assert.isFalse(toolbox.areEqual(second, third));
+        }
+    },
+    
 }).export(module);
