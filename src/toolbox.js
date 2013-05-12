@@ -1193,10 +1193,8 @@
 
 
     /**
-     *  Define function 'name' (for this example, we'll use foo) attached to 'context' 
-     *  (or 'this', if 'context' is not supplied), that when called for the first time
-     *  reassigns itself to a new function which has the result of calling foo captured
-     *  in a closure. Before exiting, it then returns the result of calling foo.
+     *  Takes a function and returns a wrapped version of it that will execute the original
+     *  one time, and then returns that same result on all following calls to it.
      *
      *  Subsequent calls to foo simply return the result that is stored in it's closure. 
      *  This is a fast lookup and efficient especially if the conditionals used in the 
@@ -1230,11 +1228,13 @@
      *      ...5 seconds...
      *      this.methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
      */
-    exports.lazydef = lazydef;
-    function lazydef(name, fn, context) {
+    exports.once = once;
+    function once(fn) {
+        var result;
         return function () {
-            var result = fn.apply(this, arguments);
-            return ((context || this)[name] = function () { return result; })();
+            if (!exists(result))
+                result = fn.apply(null, arguments);
+            return result;
         };
     }
 
