@@ -225,5 +225,24 @@ vows.describe('Toolbox').addBatch({
             assert.isFalse(toolbox.areEqual(second, third));
         }
     },
-    
+    "isType": {
+        'returns expected truth values for native types as well as custom classes': function() {
+            var test = function() { return 42; };
+            function TestClass() {}
+
+            assert.isTrue(toolbox.isType(test, 'function'));
+            assert.isTrue(toolbox.isType({ test: 1 }, 'object'));
+            assert.isTrue(toolbox.isType([1, 2, 3], 'array'));
+            assert.isTrue(toolbox.isType('test', 'string'));
+            assert.isTrue(toolbox.isType(false, 'boolean'));
+            assert.isTrue(toolbox.isType(/[\w]+/g, 'regexp'));
+            assert.isTrue(toolbox.isType(new Date(), 'date'));
+            assert.isTrue(toolbox.isType(null, 'null'));
+            assert.isTrue(toolbox.isType(undefined, 'undefined'));
+            assert.isTrue(toolbox.isType(new TestClass(), 'testclass'));
+        },
+        'if given more than one type to check against, returns true if any of them are the correct type': function() {
+            assert.isTrue(toolbox.isType(5, 'function', 'object', 'number'));
+        }
+    }
 }).export(module);
