@@ -191,12 +191,12 @@
     }, {});
     // Choose which config to use based on the value given to the builder function
     switch (getType(config)) {
-        case type.null:
-        case type.undefined:
-        case type.boolean:
+        case 'null':
+        case 'undefined':
+        case 'boolean':
             config = config ? enabledConfig : defaultConfig;
             break;
-        case type.object:
+        case 'object':
             // Rewrite config to contain only whitelisted properties,
             // with defaults pulled from defaultConfig
             var custom = {};
@@ -337,7 +337,7 @@
         bStack.push(b);
         var size = 0, result = true;
         // Recursively compare objects and arrays.
-        if (isType(a, type.array)) {
+        if (isType(a, 'array')) {
             // Compare array lengths to determine if a deep comparison is necessary.
             size = a.length;
             result = size == b.length;
@@ -422,7 +422,7 @@
      */
     exports.exists = exists;
     function exists(obj) {
-        return !isType(obj, type.null, type.undefined);
+        return !isType(obj, 'null', 'undefined');
     }
 
     /**
