@@ -244,5 +244,16 @@ vows.describe('Toolbox').addBatch({
         'if given more than one type to check against, returns true if any of them are the correct type': function() {
             assert.isTrue(toolbox.isType(5, 'function', 'object', 'number'));
         }
+    },
+    "exists": {
+        'if an element is null or undefined, it doesnt exist': function() {
+            assert.isFalse(toolbox.exists(null));
+            assert.isFalse(toolbox.exists(undefined));
+        },
+        'if an element is not null or undefined, it exists': function() {
+            assert.isTrue(toolbox.exists(5));
+            assert.isTrue(toolbox.exists('test'));
+            assert.isTrue(toolbox.exists({ test: 5 }));
+        }
     }
 }).export(module);
