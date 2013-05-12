@@ -26,21 +26,6 @@
     // Shortcut to the console
     var console = root.console || {};
 
-    // Hash of all the types and their typeof results
-    var type = {
-          function:  'function'
-        , object:    'object'
-        , array:     'array'
-        , arguments: 'arguments'
-        , string:    'string'
-        , bool:      'boolean'
-        , regex:     'regexp'
-        , date:      'date'
-        , error:     'error'
-        , null:      'null'
-        , undefined: 'undefined'
-    };
-
     // Convenience string utilities
     var string = {
           empty: ''
