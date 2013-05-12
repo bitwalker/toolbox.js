@@ -7,13 +7,9 @@ My personal javascript toolbox. No external dependencies, and offers all the uti
 
 `toolbox.js` is complete and stable at this point. Documentation has been generated, and unit tests are either implemented or on the way. All functions have been informally tested by hand, but the unit tests should provide some measure of consistency and protection moving forward.
 
-`recursion.js` is not complete, and shoult not be used at the moment. Expect that to change soon. No documentation or tests.
-
 ## TODO
 
 1. Complete unit tests for `toolbox.js`
-2. Refactor `recursion.js`, fix bugs, make stable.
-3. Docs and tests for `recursion.js`
 5. Think of a proper name
 
 ## Usage
