@@ -1023,53 +1023,6 @@
     }
 
     /**
-     *  This function is the equivalent of the 'let' keyword in Clojure. FYI:
-     *  'let' binds values to both existing and new variables for the scope of the
-     *  'let' body. When binding to existing variables, it simply shadows the
-     *  original value with the new. letvars has essentially identical behavior.
-     *  You provide a map ({}) of variable names and the values to bind, and a
-     *  function to execute with those variables available in the body. The function
-     *  will be executed immediately, so use it as you would the original function.
-     *
-     *  Some additional features based on how this works under the covers:
-     *      - You can specify expressions as values in the args object using 2 methods,
-     *      the difference is simply in what scope and at what time the expression is
-     *      evaluated:
-     *          1.) As an immediately evaluated expression: 
-     *              { x: (func() + 3) * 4 }
-     *          2.) As a string which will be evaluated when the function is called:
-     *              { y: 11, x: '(y + 3) * 4' }
-     */
-    exports.letvars = letvars;
-    function letvars(args, fn) {
-        // Assemble a string of variable declarations: var i = 0; var j = (y + 3) * 4;
-        var names  = Object.keys(args);
-        var argstr = reduce(names, function(memo, key) {
-            return string.trim(join([memo, 'var', key, '=', args[key], ';'], ' '));
-        }, '');
-        // Get the function body
-        var raw = fn.toString();
-        // If fn is a native function, letvars will not work, so throw an explanation
-        if (raw.indexOf('[native code]') !== -1) {
-            throw new Error('letvars cannot be called with a native function');
-        }
-        // Define the replacement regex for injecting our variable declarations
-        var definition = /^(function)(.*)\{([\^]*)\}/;
-        // $0 = The matched string, $3 = Function body
-        var inject = function($0, $1, $2, $3) {
-            // Inject the variable declarations at the top of the function body.
-            // The result is a functor body as a string with our modified function returned
-            return 'return (' + $0.replace($3, argstr + ' ' + $3) + ');';
-        };
-        // HACK: Dear god haaaaaack. But it actually is quite nice in this instance.
-        // 
-        // Create a new function which wraps our modified function, 
-        // and call it using the current context.
-        if (definition.test(raw)) throw new Error(format('fn does not match the expected function signature: #{ raw }'));
-        return Function(raw.replace(definition, inject))().call(this);
-    }
-
-    /**
      *  Takes a set of functions and returns a fn that is the juxtaposition
      *  of those fns. The returned fn takes a variable number of args, and
      *  returns a vector containing the result of applying each fn to the
