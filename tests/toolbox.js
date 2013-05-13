@@ -7,45 +7,45 @@ vows.describe('Toolbox').addBatch({
     'getType': {
         'returns the proper type name when provided': {
             "returns 'string' for strings": function () {
-                assert.equal(toolbox.getType('test'), 'string');
+                assert.equal(toolbox.object.getType('test'), 'string');
             },
             "returns 'number' for numbers": function () {
-                assert.equal(toolbox.getType(3), 'number');
+                assert.equal(toolbox.object.getType(3), 'number');
             },
             "returns 'object' for an object": function () {
-                assert.equal(toolbox.getType({ test: 'test' }), 'object');
+                assert.equal(toolbox.object.getType({ test: 'test' }), 'object');
             },
             "returns 'boolean' for a true/false value": function () {
-                assert.equal(toolbox.getType(false), 'boolean');
+                assert.equal(toolbox.object.getType(false), 'boolean');
             },
             "returns 'regexp' for a regular expression": function () {
-                assert.equal(toolbox.getType(/[\w]+/g), 'regexp');
+                assert.equal(toolbox.object.getType(/[\w]+/g), 'regexp');
             },
             "returns 'array' for an array": function () {
-                assert.equal(toolbox.getType([1, 2, 3]), 'array');
+                assert.equal(toolbox.object.getType([1, 2, 3]), 'array');
             },
             "returns 'function' for a function": function () {
-                assert.equal(toolbox.getType(toolbox.getType), 'function');
+                assert.equal(toolbox.object.getType(toolbox.object.getType), 'function');
             },
             "returns 'date' for a Date object": function () {
-                assert.equal(toolbox.getType(new Date()), 'date');
+                assert.equal(toolbox.object.getType(new Date()), 'date');
             },
             "returns 'testclass' for a TestClass object": function () {
                 function TestClass() {}
-                assert.equal(toolbox.getType(new TestClass()), 'testclass');
+                assert.equal(toolbox.object.getType(new TestClass()), 'testclass');
             },
             "returns 'null' for a null object": function () {
-                assert.equal(toolbox.getType(null), 'null');
+                assert.equal(toolbox.object.getType(null), 'null');
             },
             "returns 'undefined' for an undefined object": function () {
-                assert.equal(toolbox.getType(), 'undefined');
+                assert.equal(toolbox.object.getType(), 'undefined');
             }
         }
     },
-    "each": {
-        'iterates over a collection with the element, its index, and the contents of the whole collection at each step': function() {
+    "forEach": {
+        'iterates over a collection with the element, its index, and the contents of the whole collection at forEach step': function() {
             var results = [];
-            toolbox.each([1, 2, 3], function(n, idx, all) {
+            toolbox.array.forEach([1, 2, 3], function(n, idx, all) {
                 results.push({
                     number: n,
                     index: idx,
@@ -59,9 +59,9 @@ vows.describe('Toolbox').addBatch({
         }
     },
     "map": {
-        'iterates over a collection with the element, its index, and the contents of the whole collection at each step': function() {
+        'iterates over a collection with the element, its index, and the contents of the whole collection at forEach step': function() {
             var results = [];
-            toolbox.map([1, 2, 3], function(n, idx, all) {
+            toolbox.array.map([1, 2, 3], function(n, idx, all) {
                 results.push({
                     number: n,
                     index: idx,
@@ -75,7 +75,7 @@ vows.describe('Toolbox').addBatch({
         },
         'returns a new list of the mapped values when completed, leaving the original untouched': function() {
             var test = [1, 2, 3];
-            var mapped = toolbox.map(test, function(n) {
+            var mapped = toolbox.array.map(test, function(n) {
                 return n * 2;
             });
             assert.isArray(mapped);
@@ -87,12 +87,12 @@ vows.describe('Toolbox').addBatch({
     "reduce": {
         'reduces a collection to a single value': function() {
             var test = [1, 2, 3];
-            var reduced = toolbox.reduce(test, function(memo, n) { return memo + n; }, 0);
+            var reduced = toolbox.array.reduce(test, function(memo, n) { return memo + n; }, 0);
             assert.equal(reduced, 6);
         },
-        'iterates over the collection with the accumulator, the element, its index, and the whole collection at each step': function() {
+        'iterates over the collection with the accumulator, the element, its index, and the whole collection at forEach step': function() {
             var results = [];
-            toolbox.reduce([1, 2, 3], function(memo, n, idx, all) {
+            toolbox.array.reduce([1, 2, 3], function(memo, n, idx, all) {
                 results.push({
                     memo: memo,
                     number: n,
@@ -111,14 +111,14 @@ vows.describe('Toolbox').addBatch({
     "filter": {
         'filters results in a new collection of elements that passed the provided predicate': function() {
             var test = [1, 2, 3];
-            var odds = toolbox.filter(test, function(n) { return n % 2 !== 0; });
+            var odds = toolbox.array.filter(test, function(n) { return n % 2 !== 0; });
             assert.isArray(odds);
             assert.deepEqual(odds, [1, 3]);
             assert.deepEqual(test, [1, 2, 3]);
         },
-        'iterates over the collection with the element, its index, and the whole collection at each step': function() {
+        'iterates over the collection with the element, its index, and the whole collection at forEach step': function() {
             var results = [];
-            toolbox.filter([1, 2, 3], function(n, idx, all) {
+            toolbox.array.filter([1, 2, 3], function(n, idx, all) {
                 results.push({
                     number: n,
                     index: idx,
@@ -159,33 +159,33 @@ vows.describe('Toolbox').addBatch({
             try {
                 throw new toolbox.StopIterationException();
             } catch (ex) {
-                assert.equal(ex.toString(), 'Exception: Iteration of the underlying collection has been completed.');
+                assert.equal(ex.toString(), 'StopIterationException: Iteration of the underlying collection has been completed.');
                 assert.equal(ex.message, 'Iteration of the underlying collection has been completed.');
             }
         }
     },
     "areEqual": {
         'when given primitives, returns proper truth value': function() {
-            assert.isTrue(toolbox.areEqual(null, null));
-            assert.isFalse(toolbox.areEqual(null, undefined));
-            assert.isTrue(toolbox.areEqual(undefined, undefined));
-            assert.isFalse(toolbox.areEqual(undefined, null));
-            assert.isTrue(toolbox.areEqual(1, 1));
-            assert.isFalse(toolbox.areEqual(1, 2));
-            assert.isTrue(toolbox.areEqual('test', 'test'));
-            assert.isFalse(toolbox.areEqual('test', 'pies'));
-            assert.isTrue(toolbox.areEqual(/[\w]+/g, /[\w]+/g));
-            assert.isFalse(toolbox.areEqual(/[\w]+/g, /[\w]+/));
-            assert.isTrue(toolbox.areEqual(new Date(), new Date()));
-            assert.isFalse(toolbox.areEqual(new Date(), new Date(2012, 4, 12)));
-            assert.isTrue(toolbox.areEqual(true, true));
-            assert.isFalse(toolbox.areEqual(false, true));
+            assert.isTrue(toolbox.object.areEqual(null, null));
+            assert.isFalse(toolbox.object.areEqual(null, undefined));
+            assert.isTrue(toolbox.object.areEqual(undefined, undefined));
+            assert.isFalse(toolbox.object.areEqual(undefined, null));
+            assert.isTrue(toolbox.object.areEqual(1, 1));
+            assert.isFalse(toolbox.object.areEqual(1, 2));
+            assert.isTrue(toolbox.object.areEqual('test', 'test'));
+            assert.isFalse(toolbox.object.areEqual('test', 'pies'));
+            assert.isTrue(toolbox.object.areEqual(/[\w]+/g, /[\w]+/g));
+            assert.isFalse(toolbox.object.areEqual(/[\w]+/g, /[\w]+/));
+            assert.isTrue(toolbox.object.areEqual(new Date(), new Date()));
+            assert.isFalse(toolbox.object.areEqual(new Date(), new Date(2012, 4, 12)));
+            assert.isTrue(toolbox.object.areEqual(true, true));
+            assert.isFalse(toolbox.object.areEqual(false, true));
         },
         'when given an array, returns true if elements are the same': function() {
-            assert.isTrue(toolbox.areEqual([1, 2, 3], [1, 2, 3]));
+            assert.isTrue(toolbox.object.areEqual([1, 2, 3], [1, 2, 3]));
         },
         'when given an object, returns true if its properties and values are the same': function() {
-            assert.isTrue(toolbox.areEqual({ test: 1 }, { test: 1 }));
+            assert.isTrue(toolbox.object.areEqual({ test: 1 }, { test: 1 }));
         },
         'deep comparisons on object properties are possible': function() {
             var first = {
@@ -214,15 +214,15 @@ vows.describe('Toolbox').addBatch({
                     zip: 23456
                 }
             };
-            assert.isTrue(toolbox.areEqual(first, second));
-            assert.isFalse(toolbox.areEqual(second, third));
+            assert.isTrue(toolbox.object.areEqual(first, second));
+            assert.isFalse(toolbox.object.areEqual(second, third));
         },
         'deep comparisons on array values are possible': function() {
             var first = [{ id: 1, data: { test: 'stuff' } }, { id: 1, data: { test: 'stuff' } }];
             var second = [{ id: 1, data: { test: 'stuff' } }, { id: 1, data: { test: 'stuff' } }];
             var third = [{ id: 1, data: { test: 'things' } }, { id: 1, data: { test: 'stuff' } }];
-            assert.isTrue(toolbox.areEqual(first, second));
-            assert.isFalse(toolbox.areEqual(second, third));
+            assert.isTrue(toolbox.object.areEqual(first, second));
+            assert.isFalse(toolbox.object.areEqual(second, third));
         }
     },
     "isType": {
@@ -230,30 +230,30 @@ vows.describe('Toolbox').addBatch({
             var test = function() { return 42; };
             function TestClass() {}
 
-            assert.isTrue(toolbox.isType(test, 'function'));
-            assert.isTrue(toolbox.isType({ test: 1 }, 'object'));
-            assert.isTrue(toolbox.isType([1, 2, 3], 'array'));
-            assert.isTrue(toolbox.isType('test', 'string'));
-            assert.isTrue(toolbox.isType(false, 'boolean'));
-            assert.isTrue(toolbox.isType(/[\w]+/g, 'regexp'));
-            assert.isTrue(toolbox.isType(new Date(), 'date'));
-            assert.isTrue(toolbox.isType(null, 'null'));
-            assert.isTrue(toolbox.isType(undefined, 'undefined'));
-            assert.isTrue(toolbox.isType(new TestClass(), 'testclass'));
+            assert.isTrue(toolbox.object.isType(test, 'function'));
+            assert.isTrue(toolbox.object.isType({ test: 1 }, 'object'));
+            assert.isTrue(toolbox.object.isType([1, 2, 3], 'array'));
+            assert.isTrue(toolbox.object.isType('test', 'string'));
+            assert.isTrue(toolbox.object.isType(false, 'boolean'));
+            assert.isTrue(toolbox.object.isType(/[\w]+/g, 'regexp'));
+            assert.isTrue(toolbox.object.isType(new Date(), 'date'));
+            assert.isTrue(toolbox.object.isType(null, 'null'));
+            assert.isTrue(toolbox.object.isType(undefined, 'undefined'));
+            assert.isTrue(toolbox.object.isType(new TestClass(), 'testclass'));
         },
         'if given more than one type to check against, returns true if any of them are the correct type': function() {
-            assert.isTrue(toolbox.isType(5, 'function', 'object', 'number'));
+            assert.isTrue(toolbox.object.isType(5, 'function', 'object', 'number'));
         }
     },
     "exists": {
         'if an element is null or undefined, it doesnt exist': function() {
-            assert.isFalse(toolbox.exists(null));
-            assert.isFalse(toolbox.exists(undefined));
+            assert.isFalse(toolbox.object.exists(null));
+            assert.isFalse(toolbox.object.exists(undefined));
         },
         'if an element is not null or undefined, it exists': function() {
-            assert.isTrue(toolbox.exists(5));
-            assert.isTrue(toolbox.exists('test'));
-            assert.isTrue(toolbox.exists({ test: 5 }));
+            assert.isTrue(toolbox.object.exists(5));
+            assert.isTrue(toolbox.object.exists('test'));
+            assert.isTrue(toolbox.object.exists({ test: 5 }));
         }
     },
     "has": {
@@ -261,13 +261,13 @@ vows.describe('Toolbox').addBatch({
             return { test: 'stuff' };
         },
         'if an object has its own property with the given name, return true': function(obj) {
-            assert.isTrue(toolbox.has(obj, 'test'));
+            assert.isTrue(toolbox.object.has(obj, 'test'));
         },
         'if an object has a property by that name, but it is inherited, return false': function(obj) {
-            assert.isFalse(toolbox.has(obj, 'keys'));
+            assert.isFalse(toolbox.object.has(obj, 'keys'));
         },
         'if an object does not have a property by that name, return false': function(obj) {
-            assert.isFalse(toolbox.has(obj, 'things'));
+            assert.isFalse(toolbox.object.has(obj, 'things'));
         }
     }
 }).export(module);

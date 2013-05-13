@@ -1,5 +1,4 @@
 /**
- * @module toolbox
  * @author Paul Schoenfelder
  */
 (function (root, builder, undefined) {
@@ -9,211 +8,38 @@
     }
     if (typeof define === 'function') {
         // CommonJS AMD
-        define(builder(root, {}, false, builder));
+        define(builder(root, null, false, builder));
     }
     else {
         // Vanilla environments (browser)
-        root.toolbox = builder(root, {}, false, builder);
+        root.toolbox = builder(root, null, false, builder);
     }
 
 })(this, function (root, exports, config, builder, undefined) {
 
-    /**
-     * Print the current library version
-     */
-    exports.version = '1.2.1';
-
-    // Shortcut to the console
-    var console = root.console || {};
-
-    /**
-     *  Useful string values/functions
-     *  @module
-     */
-    exports.string = {};
-    /**
-     *  An empty string constant
-     *  @constant
-     */
-    exports.string.empty = '';
-    /**
-     *  An empty newline constant
-     *  @constant
-     */
-    exports.string.newline = '\r\n';
-    /**
-     *  Trims a string of whitespace, or the provided string
-     *  @static
-     */
-    exports.string.trim = trim;
-    function trim(s) {
-        return String.prototype.trim.call(str);
-    }
-    /**
-     *  Determine if the provided string is empty
-     *  @param (string) s - The string to test
-     *  @static
-     */
-    exports.string.isEmpty = isEmpty;
-    function isEmpty(s) {
-        var emptyPattern = /[\S]+/g;
-        return !exists(s) || !emptyPattern.test(s);
-    }
-    /**
-     * Repeats the provided string n-times. Returns a new string.
-     */
-    exports.string.repeat = repeatString;
-    function repeatString(str, n) {
-        n = n || 1;
-
-        if (!isType(str, 'string'))
-            throw new Exception('repeat: str must be a string.');
-        if (!isType(n, 'number'))
-            throw new Exception('repeat: n must be a number.');
-
-        var result = str;
-        for (var i = 1; i < n; i++) {
-            result = result + str;
-        }
-
-        return result;
-    }
-
-
-    // Create shorthand refrences to exported functions
-    // for usage inside this builder function
-    var each, map, reduce, filter;
+    exports = exports || {};
 
     /** 
-     *  Get the type string for the provided object. Calls to this function are memoized.
-     *  @param {object} obj - The object whose type we want to inspect
+     *  The root Toolbox.js namespace
+     *  @namespace toolbox 
      */
-    exports.getType = getType;
-    function getType(obj) {
-        if (typeof obj === 'undefined')
-            return 'undefined';
-        else if (obj === null)
-            return 'null';
-        else if (obj.constructor && obj.constructor.name)
-            return obj.constructor.name.toLowerCase();
-        else
-            return Object.prototype.toString.call(obj).toLowerCase();
-    }
-
 
     /**
-     *  Call a function for each element in an enumerable object. Use native forEach if available or fallback on ECMA262 5th Edition implementation
-     *  @param {function} iterator - The function to call on each element
-     *  @param {object} context - Bind the provided object as 'this' for the iterator function
+     * Print the current Toolbox.js version
+     * @memberof toolbox
+     * @name version
+     * @type string
      */
-    exports.each = each = (function() {
-        var _each = Array.prototype.forEach || ecma262ForEach;
-        return function (collection, iterator, context) { return _each.call(collection, iterator, context); };
-    })();
-    function ecma262ForEach(iterator, context) {
-            if (!this)
-                throw new Exception('each: Array is null or undefined.', arguments);
-            if (!isType(iterator, 'function'))
-                throw new Exception('each: Iterator is not callable.', arguments);
+    exports.version = '2.0.0';
 
-        var collection = Object(this);
-        var len        = o.length >>> 0; // Force o.length to int
-        var index      = 0;
-        context = context || null;
-        while (index < len) {
-            if (has(o, index)) {
-                var val = o[index];
-                iterator.call(context, val, index, collection);
-            }
-            index++;
-        }
-    }
-
-    /**
-     * Map a function across a collection, generating a new collection as a result.
-     * @param {Array} collection - The collection to map
-     * @param {function} fn - The mapping function to apply
-     */
-    exports.map = map = (function() {
-        var _map = Array.prototype.map || (function() {
-            Array.prototype.map = function (fn) {
-                var results = [];
-                each(this, function(element, index, all) {
-                    results.push(iterator.call(null, element, index, all));
-                });
-                return results;
-            };
-
-            return Array.prototype.map;
-        })();
-
-        return function(collection, fn) { return _map.call(collection, fn); };
-    })();
-
-
-    /**
-     *  Reduce a collection to a single value, by applying elements left to right until only one is left
-     *  @param {Array} collection - The collection to reduce
-     *  @param {function} accumulator - The function which will reduce the last value and the current value
-     *  @param {object} memo - The object which will accumulate the final result to be returned
-     */
-    exports.reduce = reduce = (function() {
-        var _reduce = Array.prototype.reduce || (function() {
-            Array.prototype.reduce = function (accumulator, initialValue) {
-                if (!initialValue)
-                    throw new Exception("No initial value was provided.", arguments);
-
-                var result = initialValue;
-                each(this, function(element, index, all) {
-                     result = accumulator.call(null, result, element, index, all);
-                });
-                return result;
-            };
-
-            return Array.prototype.reduce;
-        })();
-
-        return function (collection, accumulator, initialValue) { return _reduce.call(collection, accumulator, initialValue); };
-    })();
-
-    /**
-     *  Remove elements from a collection that do not pass the predicate
-     *  @param {Array} collection - The collection to filter
-     *  @param {function} predicate - The predicate function takes (in this order), the item to check, the index of the item, and the entire collection
-     *  @param {object} context - The context to execute the filter in
-     */
-    exports.filter = filter = (function() {
-        var _filter = Array.prototype.filter || (function() {
-            Array.prototype.filter = function (predicate, context) {
-
-                if (typeof predicate !== 'function')
-                    throw new Exception("Predicate is not callable.", arguments);
-
-                var results = [];
-                each(this, function (element, index, all) {
-                    if (predicate.call(context, element, index, all))
-                        results.push(element);
-                });
-                return results;
-            };
-
-            return Array.prototype.filter;
-        })();
-
-        return function (collection, predicate, context) { return _filter.call(collection, predicate, context); };
-    })();
-
-
-    // The default configuration (everything disabled)
     var defaultConfig = {
         extendPrototypes:    false,
         createGlobalAliases: false
     };
-    // The "give-me-everything" config (everything enabled)
-    var enabledConfig = reduce(Object.keys(defaultConfig), function (obj, key) {
-        obj[key] = true;
-        return obj;
-    }, {});
+    var enabledConfig = {
+        extendPrototypes:    true,
+        createGlobalAliases: true
+    };
     // Choose which config to use based on the value given to the builder function
     switch (getType(config)) {
         case 'null':
@@ -261,62 +87,575 @@
      *      Enables extension of system prototypes with new features. This option only applies to features which do not alter the behavior of those classes.
      *
      *  createGlobalAliases:
-     *      Creates aliases to exported functions. i.e., `$toolbox.each` would also have a global `each` alias.
+     *      Creates aliases to exported functions. i.e., `$toolbox.forEach` would also have a global `forEach` alias.
      *
      *  @param {object} config - Either true/false or an object that defines the configuration values desired
+     *  @memberof toolbox
+     *  @type Toolbox
      */
-    exports.configure = configure;
     function configure(config) {
         return builder.call(null, root, exports, config, builder);
     }
+    exports.configure = configure;
 
     /**
      *  Retreive the current configuration object. Read-only.
+     *  @memberof toolbox
+     *  @type object
      */
-    exports.config = getConfig;
     function getConfig() {
         return config;
     }
+    exports.config = getConfig;
 
     /**
-     *  Creates a new exception
-     *  @constructor
+     *  Useful string values/functions
+     *  @namespace toolbox.string
      */
-    exports.Exception = Exception;
-    function Exception(message, context) {
-        this.context = context;
-        this.message = message;
-
-        return this;
-    }
-    Exception.prototype = Error.prototype;
-    /** Get the exception message as a string */
-    Exception.prototype.toString = function () {
-        return 'Exception: ' + this.message;
-    };
+    exports.string = {};
 
     /**
-     *  Thrown when a Generator reaches the end of it's internal collection.
-     *  @constructor
+     *  An empty string
+     *  @constant
+     *  @memberof toolbox.string
+     *  @name empty
      */
-    exports.StopIterationException = StopIterationException;
-    function StopIterationException () {
-        this.message = 'Iteration of the underlying collection has been completed.';
+    exports.string.empty = '';
 
-        return this;
+    /**
+     *  A newline string: `\r\n`
+     *  @constant
+     *  @memberof toolbox.string
+     *  @name newline
+     */
+    exports.string.newline = '\r\n';
+
+    /**
+     *  Trims a string of leading and trailing whitespace
+     *  @param {string} s - The string to trim
+     *  @memberof toolbox.string
+     *  @type string
+     */
+    function trim(s) {
+        return String.prototype.trim.call(s);
     }
-    StopIterationException.prototype = Exception.prototype;
+    exports.string.trim = trim;
+
+    /**
+     *  Determine if the provided string is empty
+     *  @param {string} s - The string to test
+     *  @memberof toolbox.string
+     *  @type string
+     */
+    function isEmpty(s) {
+        var emptyPattern = /[\S]+/g;
+        return !exists(s) || !emptyPattern.test(s);
+    }
+    exports.string.isEmpty = isEmpty;
+
+    if (config.extendPrototypes) {
+        String.prototype.isEmpty = function() {
+            return isEmpty.call(null, this);
+        };
+    }
+
+    /**
+     * Repeats the provided string n-times. Returns a new string.
+     * @param {string} s - The string to repeat
+     * @param {nubmer} n - The number of times to repeat the string
+     * @memberof toolbox.string
+     * @type string
+     */
+    function repeatString(s, n) {
+        n = n || 1;
+
+        if (!isType(s, 'string'))
+            throw new Exception('repeat: str must be a string.');
+        if (!isType(n, 'number'))
+            throw new Exception('repeat: n must be a number.');
+
+        var result = s;
+        for (var i = 1; i < n; i++) {
+            result = result + s;
+        }
+
+        return result;
+    }
+    exports.string.repeat = repeatString;
+
+    if (config.extendPrototypes) {
+        String.prototype.repeat = function(n) {
+            return repeatString.call(null, this, n);
+        };
+    }
+
+    /**
+     *  With no args, returns an empty string. With one arg x, returns
+     *  x.toString(). str(null) returns an empty string. With more than
+     *  one arg, returns the concatenation of the str values of the args.
+     * 
+     *  @param {string} seperator - The seperator string to use. Defaults to string.empty
+     *  @param {*} args* - A variable number of arguments to transform
+     *  @memberof toolbox.string
+     */
+    function str(seperator) {
+        var args = slice(arguments);
+        // If no seperator was provided, the first argument should be part of the result
+        if (!isType(seperator, 'string')) {
+            seperator = '';
+        } else {
+            args = slice(args, 1);
+        }
+
+        if (args.length) {
+            return reduce(args, function (memo, arg) {
+                var append = '';
+                // Reduce an array to a string
+                if (isType(arg, 'array'))
+                    append = reduce(arg, function(m, a) {
+                        if (isEmpty(m)) return a.toString();
+                        else return m + seperator + a.toString();
+                    }, '');
+                else if (exists(arg.toString))
+                    append = arg.toString();
+                else
+                    append = Object.prototype.toString.call(arg);
+
+                if (isEmpty(memo))
+                    return append;
+                else if (exists(seperator))
+                    return memo + seperator + append;
+                else return memo + append;
+            }, '');
+        } else return '';
+    }
+    exports.string.str = str;
+
+    /**
+     *  Returns a new string or RegExp (depending on which one was passed in as target).
+     *  EXAMPLES:
+     *
+     *      string.format('yellow #{0}', 'moon')    #=> 'yellow moon'
+     *      string.format(/^[#{0}]$/g, '\\w')       #=> /^[\w]$/g
+     *      string.format('My #{0} is #{name}', 'name', {
+     *          name: 'Paul'
+     *      })                                             #=> 'My name is Paul'
+     *
+     *  **NOTES:**
+     *
+     *  1. The arguments object is used here to allow for an unlimited number of parameters.
+     *  2. You can mix and match interpolation types (named, indexed), but in order to
+     *     use named variables, you must pass in an object with those names as properties.
+     *     Objects are ignored for indexing (they will only be used for replacing named variables)
+     *     so the order of the parameters is important, with Objects being the only exception.
+     *
+     *  @param {string} - The format string
+     *  @param {*} args* - A variable number of arguments to apply to the format string.
+     *  @memberof toolbox.string
+     */
+    function format(s) {
+        function interpolate(s, args) {
+            if (isType(s, 'regexp') || isType(s, 'string')) {
+
+                // The pattern to match for interpolation variables
+                var interpolated, interpolationPattern = /#\{[\d]+\}|#\{[\w-_]+\}/g;
+                // An array of strings that were split by matching on the interpolation pattern
+                var matches = [];
+                // Regular expression parts to be reassembled later
+                var flags, regex;
+
+                if (isType(s, 'regexp')) {
+                    // Get the array of matches for flags, and use
+                    // shift to remove the pattern match element
+                    flags = /.+\/([gim]+)?$/.exec(s.toString());
+                    flags.shift();
+                    // Get the raw pattern without the js jive
+                    regex = /^\/(.+)\/[gim]+?$/.exec(s.toString());
+                    regex.shift();
+
+                    // We're assuming that to reach this point, this is a valid regexp,
+                    // so regex will always contain one element, which is the raw pattern
+                    interpolated = regex[0];
+                }
+                else {
+                    interpolated = s;
+                }
+
+                if (args.length) {
+                    // For every argument passed in, find the interpolation variable with
+                    // the same index value (minus one to account for the string var istelf).
+                    // So: interpolate("Hello, #{0}. #{1}", 'Paul', "It's nice to meet you.") will
+                    // render "Hello, Paul. It's nice to meet you."
+                    matches = interpolationPattern.test(interpolated) ? interpolated.match(interpolationPattern).length : 0;
+
+                    if (matches === args.length) {
+                        // There was an argument supplied for all interpolations
+                        interpolated = doReplace(interpolated, args);
+                    }
+                    else if (matches < args.length) {
+                        // There were more arguments supplied than interpolations
+                        interpolated = doReplace(interpolated, args);
+                    }
+                    else if (matches > args.length) {
+                        // There were fewer arguments supplied than interpolations
+                        var memo = args[args.length - 1];
+                        // Replace the provided arguments
+                        interpolated = doReplace(interpolated, args);
+                        // Replace remaining interpolations with the last provided argument value
+                        interpolated = doReplaceAll(interpolated, memo);
+                    }
+                }
+
+                return interpolated;
+            }
+            else {
+                throw new Error('Invalid type passed as interpolation target. Must be string or RegExp.');
+            }
+
+        }
+
+        // Iterate through the arguments, peforming either an indexed or named interpolation depending on param type
+        function doReplace(target, replacements) {
+            var result = target;
+            forEach(replacements, function (arg, index) {
+                if (isType(arg, 'object')) {
+                    for (var key in arg) {
+                        var pattern = new RegExp('#\\{' + key + '\\}', 'g');
+                        result = result.replace(pattern, arg[key]);
+                    }
+                }
+                else {
+                    var pattern = new RegExp('#\\{' + index + '\\}', 'g');
+                    result = result.replace(pattern, arg.toString());
+                }
+            });
+            return result;
+        }
+
+        // Replace all instances of #{[\d]+}
+        function doReplaceAll(target, replace) {
+            var result = target.replace(interpolationPattern, replace.toString());
+            return result;
+        }
+
+        return interpolate(s, slice(arguments, 1));
+    }
+    exports.string.format = format;
+
+
+    /**
+     *  Object related functions
+     *  @namespace toolbox.object
+     */
+    exports.object = {};
+
+    /** 
+     *  Get the type string for the provided object. Calls to this function are memoized.
+     *
+     *  @param {object} obj - The object whose type we want to inspect
+     *  @memberof toolbox.object
+     */
+    function getType(obj) {
+        if (typeof obj === 'undefined')
+            return 'undefined';
+        else if (obj === null)
+            return 'null';
+        else if (obj.constructor && obj.constructor.name)
+            return obj.constructor.name.toLowerCase();
+        else
+            return Object.prototype.toString.call(obj).toLowerCase();
+    }
+
+    if (config.extendPrototypes) {
+        Object.prototype.getType = function() {
+            return getType.call(null, this);
+        };
+    }
+    exports.object.getType = getType;
+
+    /**
+     *  Determine if the first object is of the same type as the second object.
+     *  Alternatively, you can pass in a string representing the name of the type
+     *  you are comparing for. A few examples
+     *
+     *      isType({}, Object.prototype) ==> true
+     *      isType(obj, undefined)       ==> true
+     *      isType(5, 'number')          ==> true
+     *
+     *  **IMPORTANT**: Referencing constructors instead of the prototype for the object
+     *  you are comparing against will fail! Remember, constructors are of type Function.
+     *  
+     *  Example: `Object == [object Function]` and `Object.prototype == [object Object]`
+     *
+     *  @param {object} obj - The object to test
+     *  @param {string} args* - A variable number of type names to test for
+     *  @memberof toolbox.object
+     */
+    function isType(obj) {
+        var args = slice(arguments, 1);
+        if (!args.length)
+            throw new Exception('isType requires at least two arguments.');
+
+        for (var i = 0; i < args.length; i++) {
+            var y = typeof args[i] === 'string' ? args[i] : getType(args[i]);
+
+            if (obj === undefined && (y === 'undefined' || y === undefined))
+                return true;
+            else if (obj === null && (y === 'null' || y === null))
+                return true;
+            else {
+                if (getType(obj) === y)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+    exports.object.isType = isType;
+
+    if (config.extendPrototypes) {
+        Object.prototype.isType = function() {
+            var args = concat(this, slice(arguments));
+            return isType.apply(null, args);
+        };
+    }
+
+    /**
+     *  Determine if an object is null or undefined
+     *
+     *  @param {object} obj - The object to test
+     *  @memberof toolbox.object
+     */
+    function exists(obj) {
+        return !isType(obj, 'null', 'undefined');
+    }
+    exports.object.exists = exists;
+
+    /**
+     *  Determine if an object has it's own property with the provided name
+     *
+     *  @param {object} obj - The object to check
+     *  @param {string} name - The property name to look up
+     *  @memberof toolbox.object
+     */
+    function has(obj, name) {
+        if (!exists(obj))
+            throw new Exception('has: Object does not exist.', arguments);
+
+        // If no property name is provided, return all property names which this object owns
+        if (!exists(name)) {
+            return reduce(Object.keys(obj), function(result, key) {
+                if (Object.prototype.hasOwnProperty.call(obj, key))
+                    result.push(key);
+                return result;
+            }, []);
+        }
+        // Otherwise, return true or false depending on whether the object has that property
+        else {
+            if (Object.prototype.hasOwnProperty.call(obj, name))
+                return true;
+            else
+                return false;
+        }
+    }
+    exports.object.has = has;
+
+    if (config.extendPrototypes) {
+        Object.prototype.has = Object.prototype.hasOwnProperty || function(key) {
+            return has.call(null, this, key);
+        };
+    }
+
+    /**
+     *  Safely extend the toolbox, or another object
+     *
+     *  @param {object} target - The object to mix into
+     *  @param {object} source - The object we're mixing
+     *  @param {Array} blacklist - A list of function names that cannot be mixed over
+     *  @memberof toolbox.object
+     */
+    function mixin(target, source, blacklist) {
+        // Make sure that if we're mixing into the toolbox, certain properties cannot be overwritten
+        if (this === target)
+            blacklist = union(['configure', 'config'], blacklist);
+
+        var isBlacklisted = partial(contains, blacklist || []);
+        // Ignore all functions/properties that are blacklisted by name
+        var functionNames = pick(functions(source), 'name');
+        var propertyNames = pick(properties(source), 'name');
+        var valid = reject(concat(functionNames, propertyNames), isBlacklisted);
+
+        forEach(valid, function(name) { target[name] = source[name]; });
+
+        return target;
+    }
+    exports.object.mixin = mixin;
+
+    if (config.extendPrototypes) {
+        Object.prototype.mixin = function(source, blacklist) {
+            return mixin.call(null, this, source, blacklist);
+        };
+    }
+
+    /**
+     *  Extend an object with properties from one or more other objects.
+     *  Last definition wins, so the last object to define a property will
+     *  have it's value set for that property on the resulting object.
+     *
+     *  @param {object} target - The object to extend
+     *  @param {object} args* - A variable number of objects to extend the target with
+     *  @memberof toolbox.object
+     */
+    function extend(target) {
+        if (this === target)
+            throw new Exception('extend: Cannot extend toolbox. Use mixin instead.', this);
+
+        var extensions = slice(arguments, 1);
+        if (extensions.length)
+        {
+            forEach(extensions, function(extension) {
+                var functions  = pick(functions(extension), 'name');
+                var properties = pick(properties(extension), 'name');
+                forEach(concat(functions, properties), function(prop) {
+                    target[prop] = extension[prop];
+                });
+            });
+        }
+
+        return target;
+    }
+    exports.object.extend = extend;
+
+    if (config.extendPrototypes) {
+        Object.prototype.extend = function() {
+            var args = concat(this, slice(arguments));
+            return extend.apply(null, args);
+        };
+    }
+
+    /**
+     *  Determines if an object property is callable as a function
+     *
+     *  @param {object} obj - The object to test
+     *  @memberof toolbox.object
+     */
+    function isFunction(obj) {
+        return isType(obj, 'function');
+    }
+    exports.object.isFunction = isFunction;
+
+    /**
+     *  Return all of an object's own functions/methods with the following schema
+     *
+     *      descriptor = {
+     *          name: The name of the function
+     *          fn: The function object itself, prebound with the object's context
+     *          arguments: The number of arguments the function takes
+     *      }
+     *
+     *  @param {object} obj - The object to look for functions on
+     *  @memberof toolbox.object
+     */
+    function functions(obj) {
+        var funcs = [];
+
+        for (var key in obj) {
+            if (has(obj, key) && isFunction(obj[key])) {
+                var createExecutor = function(k) { return bind(obj[k], obj); };
+                var func = {
+                      name: key
+                    , fn: createExecutor(key)
+                    , arguments: obj[key].length
+                };
+                funcs.push(func);
+            }
+        }
+
+        return funcs;
+    }
+    exports.object.functions = functions;
+
+    if (config.extendPrototypes) {
+        Object.prototype.functions = function() {
+            return functions.call(null, this);
+        };
+    }
+
+    /**
+     *  Return all of an object's own properties that are not functions with the following schema
+     *
+     *      descriptor = {
+     *          name: The property name
+     *          get: A function to get the property's value (prebound to the object's context)
+     *          set: A function to set the property's value (prebound to the object's context)
+     *      }
+     *
+     *  @param {object} obj - The object to look for properties on
+     *  @memberof toolbox.object
+     */
+    function properties(obj) {
+        var props = [];
+
+        for (var key in obj) {
+            if (has(obj, key) && !isFunction(obj[key])) {
+                var createGet = function(k) { return bind(function() { return this[k]; }, obj); };
+                var createSet = function(k) { return bind(function(value) { this[k] = value; }, obj); };
+                var prop = {
+                      name: key
+                    , get: createGet(key)
+                    , set: createSet(key)
+                };
+                props.push(prop);
+            }
+        }
+
+        return props;
+    }
+    exports.object.properties = properties;
+
+    if (config.extendPrototypes) {
+        Object.prototype.properties = function() {
+            return properties.call(null, this);
+        };
+    }
+
+    /**
+     *  Pick the value associated with the specified property for
+     *  forEach object in an array of objects.
+     *
+     *  @param {object[]} objs - The array of objects to iterate over
+     *  @param {string} prop - The property name to select
+     *  @memberof toolbox.object
+     */
+    function pick(objs, prop) {
+        return reduce(objs, function(result, obj) {
+            if (obj[prop])
+                result.push(obj[prop]);
+            return result;
+        }, []);
+    }
+    exports.object.pick = pick;
+
+    if (config.extendPrototypes) {
+        Object.prototype.pick = function(property) {
+            return pick.call(null, this, property);
+        };
+    }
 
     /**
      *  Perform a deep comparison to check if two objects are equal.
      *
      *  The guts of this function are basically ripped straight from Underscore.js
      *  with small modifications. Internal recursive comparison function for `areEqual`
+     *
+     *  @param {object} a - The first object to compare
+     *  @param {object} b - The second object to compare
+     *  @memberof toolbox.object
      */
-    exports.areEqual = areEqual;
     function areEqual(a, b) {
         return eq(a, b, [], []);
     }
+    exports.object.areEqual = areEqual;
     function eq(a, b, aStack, bStack) {
         // Identical objects are equal. `0 === -0`, but they aren't identical.
         // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
@@ -385,7 +724,7 @@
                 if (has(a, key)) {
                     // Count the expected number of properties.
                     size++;
-                    // Deep compare each member.
+                    // Deep compare forEach member.
                     if (!(result = has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
                 }
             }
@@ -403,356 +742,627 @@
         return result;
     }
 
+    if (config.extendPrototypes) {
+        Object.prototype.areEqual = function(obj) {
+            return areEqual.call(null, this, obj);
+        };
+    }
+
 
 
     /**
-     *  Determine if the first object is of the same type as the second object.
-     *  Alternatively, you can pass in a string representing the name of the type
-     *  you are comparing for. A few examples
+     *  Functions for manipulating, iterating, and searching arrays
+     *  @namespace toolbox.array
+     */
+    exports.array = {};
+
+    /**
+     *  Call a function for forEach element in an enumerable object. Use native forEach if available or fallback on ECMA262 5th Edition implementation
      *
-     *      isType({}, Object.prototype) ==> true
-     *      isType(obj, undefined)       ==> true
-     *      isType(5, 'number')          ==> true
+     *  @param {array} collection - The array to iterate over
+     *  @param {function} iterator - The function to call on forEach element
+     *  @param {object} context - Bind the provided object as 'this' for the iterator function
+     *  @memberof toolbox.array
+     */
+    function forEach(collection, iterator, context) {
+        if (!collection)
+            throw new Exception('forEach: Array is null or undefined.', arguments);
+        if (!isType(iterator, 'function'))
+            throw new Exception('forEach: Iterator is not callable.', arguments);
+
+        var len        = collection.length >>> 0; // Force collection.length to int
+        var index      = 0;
+        context = context || null;
+        while (index < len) {
+            if (has(collection, index)) {
+                var val = collection[index];
+                iterator.call(context, val, index, collection);
+            }
+            index++;
+        }
+    }
+    exports.array.forEach = forEach;
+
+    if (config.extendPrototypes) {
+        Array.prototype.forEach = Array.prototype.forEach || function(iterator, context) {
+            return forEach.call(null, this, iterator, context);
+        };
+    }
+
+    /**
+     *  Map a function across a collection, generating a new collection as a result.
      *
-     *  **IMPORTANT**: Referencing constructors instead of the prototype for the object
-     *  you are comparing against will fail! Remember, constructors are of type Function.
+     *  @param {Array} collection - The collection to map
+     *  @param {function} fn - The mapping function to apply
+     *  @memberof toolbox.array
+     */
+    function map(collection, fn) {
+        var results = [];
+        forEach(collection, function(element, index, all) {
+            results.push(fn.call(null, element, index, all));
+        });
+        return results;
+    }
+    exports.array.map = map;
+
+    if (config.extendPrototypes) {
+        Array.prototype.map = Array.prototype.map || function(fn) {
+            return map.call(null, this, fn);
+        };
+    }
+
+    /**
+     *  Reduce a collection to a single value, by applying elements left to right until only one is left
      *  
-     *  Example: `Object == [object Function]` and `Object.prototype == [object Object]`
+     *  @param {Array} collection - The collection to reduce
+     *  @param {function} accumulator - The function which will reduce the last value and the current value
+     *  @param {object} memo - The object which will accumulate the final result to be returned
+     *  @memberof toolbox.array
      */
-    exports.isType = isType;
-    function isType(x) {
-        var args = slice(arguments, 1);
-        if (!args.length)
-            throw new Error('isType requires at least two arguments.');
+    function reduce (collection, accumulator, initialValue) {
+        if (!exists(initialValue))
+            throw new Exception("No initial value was provided.", arguments);
 
-        for (var i = 0; i < args.length; i++) {
-            var y = typeof args[i] === 'string' ? args[i] : getType(args[i]);
+        var result = initialValue;
+        forEach(collection, function(element, index, all) {
+             result = accumulator.call(null, result, element, index, all);
+        });
+        return result;
+    }
+    exports.array.reduce = reduce;
 
-            if (x === undefined && (y === 'undefined' || y === undefined))
-                return true;
-            else if (x === null && (y === 'null' || y === null))
-                return true;
-            else {
-                if (getType(x) === y)
-                    return true;
-            }
-        }
-
-        return false;
+    if (config.extendPrototypes) {
+        Array.prototype.reduce = Array.prototype.reduce || function(accumulator, initialValue) {
+            return reduce.call(null, this, accumulator, initialValue);
+        };
     }
 
     /**
-        Determine if an object is null or undefined
-        @param {object} obj - The object in question
-     */
-    exports.exists = exists;
-    function exists(obj) {
-        return !isType(obj, 'null', 'undefined');
-    }
-
-    /**
-        Determine if an object has it's own property with the provided name
-        @param {object} obj - The object to check
-        @param {string} name - The property name to look up
-     */
-    exports.has = has;
-    function has(obj, name) {
-        if (!exists(obj))
-            throw new Exception('$toolbox.has: Object does not exist.', arguments);
-
-        // If no property name is provided, return all property names which this object owns
-        if (!exists(name)) {
-            return reduce(Object.keys(obj), function(result, key) {
-                if (Object.prototype.hasOwnProperty.call(obj, key))
-                    result.push(key);
-                return result;
-            }, []);
-        }
-        // Otherwise, return true or false depending on whether the object has that property
-        else {
-            if (Object.prototype.hasOwnProperty.call(obj, name))
-                return true;
-            else
-                return false;
-        }
-    }
-
-    /**
-     *  Safely extend the toolbox, or another object
-     *  @param {object} $me - The object to mix into
-     *  @param {object} $you - The objext we're mixing
-     *  @param {Array} blacklist - A list of function names that cannot be mixed over
-     ****/
-    exports.mixin = mixin;
-    function mixin(target, source, blacklist) {
-        // Make sure that if we're mixing into the toolbox, certain properties cannot be overwritten
-        if (this === target)
-            blacklist = union(['configure', 'config'], blacklist);
-
-        var isBlacklisted = papply(contains, blacklist || []);
-        // Ignore all functions/properties that are blacklisted by name
-        var functionNames = pick(functions(source), 'name');
-        var propertyNames = pick(properties(source), 'name');
-        var valid = reject(isBlacklisted, concat(functionNames, propertyNames));
-
-        each(valid, function(name) { target[name] = source[name]; });
-
-        return target;
-    }
-
-    /**
-     *  Extend an object with properties from one or more other objects.
-     *  Last definition wins, so the last object to define a property will
-     *  have it's value set for that property on the resulting object.
-     */
-    exports.extend = extend;
-    function extend(target) {
-        if (this === target)
-            throw new Exception('extend: Cannot extend toolbox. Use mixin instead.', this);
-
-        var extensions = slice(arguments, 1);
-        if (extensions.length)
-        {
-            each(extensions, function(extension) {
-                var functions  = pick(functions(extension), 'name');
-                var properties = pick(properties(extension), 'name');
-                each(concat(functions, properties), function(prop) {
-                    target[prop] = extension[prop];
-                });
-            });
-        }
-
-        return target;
-    }
-
-    /**
-     *  Determines if an object property is callable as a function
-     *  @param {object} obj - The object to look the property up in
-     *  @param {string} prop - The name of the property to check
-     */
-    exports.isFunction = isFunction;
-    function isFunction(obj, prop) {
-        if (isType(obj[prop], 'function')) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *  Return all of an object's own functions/methods with the following schema
+     *  Remove elements from a collection that do not pass the predicate
      *
-     *      descriptor = {
-     *          name: The name of the function
-     *          fn: The function object itself, prebound with the object's context
-     *          arguments: The number of arguments the function takes
-     *      }
+     *  @param {Array} collection - The collection to filter
+     *  @param {function} predicate - The predicate function takes (in this order), the item to check, the index of the item, and the entire collection
+     *  @param {object} context - The context to execute the filter in
+     *  @memberof toolbox.array
      */
-    exports.functions = functions;
-    function functions(obj) {
-        var funcs = [];
+    function filter (collection, predicate, context) {
+        if (typeof predicate !== 'function')
+            throw new Exception("Predicate is not callable.", arguments);
 
-        for (var key in obj) {
-            if (has(obj, key) && isFunction(obj, key)) {
-                var createExecutor = function(k) { return bind(obj[k], obj); };
-                var func = {
-                      name: key
-                    , fn: createExecutor(key)
-                    , arguments: obj[key].length
-                };
-                funcs.push(func);
-            }
-        }
+        var results = [];
+        forEach(collection, function (element, index, all) {
+            if (predicate.call(context, element, index, all))
+                results.push(element);
+        });
+        return results;
+    }
+    exports.array.filter = filter;
 
-        return funcs;
+    if (config.extendPrototypes) {
+        Array.prototype.filter = Array.prototype.filter || function(predicate, context) {
+            return filter.call(null, this, predicate, context);
+        };
     }
 
-    /**
-     *  Return all of an object's own properties that are not functions
+    /** 
+     *  Join a collection with the provided seperator. 
+     *
+     *  @param {array} c - The collection to slice
+     *  @param {number} start - (Optional) the start index of the slice
+     *  @param {number} end   - (Optional) the end index of the slice
+     *  @memberof toolbox.array
      */
-    exports.properties = properties;
-    function properties(obj) {
-        var props = [];
+    function slice (c, start, end) {
+        return Array.prototype.slice.call(c, start, end);
+    }
+    exports.array.slice = slice;
 
-        for (var key in obj) {
-            if (has(obj, key) && !isFunction(obj, key)) {
-                var createGet = function(k) { return bind(function() { return this[k]; }, obj); };
-                var createSet = function(k) { return bind(function(value) { this[k] = value; }, obj); };
-                var prop = {
-                      name: key
-                    , get: createGet(key)
-                    , set: createSet(key)
-                };
-                props.push(prop);
-            }
-        }
+    /**  
+     *  Concatenate N arguments into a new array. 
+     *
+     *  @param {*} args* - A variable number of arguments to concatenate into a single array
+     *  @memberof toolbox.array
+     */
+    function concat () {
+        return Array.prototype.concat.apply([], slice(arguments));
+    }
+    exports.array.concat = concat;
 
-        return props;
+    /**  
+     *  Create a new array with the contents of the original collection, plus any additional 
+     *  arguments provided appended to the end.
+     *
+     *  @param {array} c - The collection to append to
+     *  @param {*} args* - A variable number of arguments to append
+     *  @memberof toolbox.array
+     */
+    function append (c) {
+        return concat(c, slice(arguments, 1));
+    }
+    exports.array.append = append;
+
+    /**
+     *  Create a new array given a pair of items.
+     *
+     *  @param {object} x - The head object
+     *  @param {object} y - The tail object
+     *  @memberof toolbox.array
+     */
+    function cons (x, y) {
+        return concat(x, y);
+    }
+    exports.array.cons = cons;
+
+    /** 
+     *  Return the first element of the provided collection 
+     *
+     *  @param {array} The collection to get from
+     *  @memberof toolbox.array
+     */
+    function first (c) {
+        var result = c[0];
+        return result;
+    }
+    exports.array.first = first;
+    /** 
+     *  Alias for `first` 
+     *  @name head
+     *  @memberof toolbox.array
+     */
+    exports.array.head = first;
+
+    if (config.extendPrototypes) {
+        Array.prototype.first = function() {
+            return first.call(null, this);
+        };
+        Array.prototype.head = function() {
+            return first.call(null, this);
+        };
     }
 
-    /**
-     *  Pick the value associated with the specified property for
-     *  each object in an array of objects.
+    /** 
+     *  Return the last element of the provided collection 
+     *
+     *  @param {array} c - The collection to get from
+     *  @memberof toolbox.array
      */
-    exports.pick = pick;
-    function pick(objs, prop) {
-        return reduce(objs, function(result, obj) {
-            if (obj[prop])
-                result.push(obj[prop]);
+    function last (c) {
+        var result = c.length > 0 ? c[c.length-1] : null;
+        return result;
+    }
+    exports.array.last = last;
+
+    if (config.extendPrototypes) {
+        Array.prototype.last = function() {
+            return last.call(null, this);
+        };
+    }
+
+    /** 
+     *  Return all but the first element of the provided collection 
+     * 
+     *  @param {array} c - The collection to get from
+     *  @memberof toolbox.array
+     */
+    function tail (c) {
+        return slice(c, 1);
+    }
+    exports.array.tail = tail;
+    /** 
+     *  Alias for `tail` 
+     *  @name tail
+     *  @memberof toolbox.array
+     */
+    exports.array.rest = tail;
+
+    if (config.extendPrototypes) {
+        Array.prototype.tail = function() {
+            return tail.call(null, this);
+        };
+        Array.prototype.rest = function() {
+            return tail.call(null, this);
+        };
+    }
+
+    /** 
+     *  Returns true of the provided collection contains the given element 
+     *
+     *  @param {array} c - The collection to search
+     *  @param {object} item - The item to search for
+     *  @memberof toolbox.array
+     */
+    function contains (c, item) {
+        return any(c, function (element) { return areEqual(item, element); });
+    }
+    exports.array.contains = contains;
+
+    if (config.extendPrototypes) {
+        Array.prototype.contains = function(item) {
+            return contains.call(null, this, item);
+        };
+    }
+
+    /** 
+     *  Returns only the unique elements from the provided collection 
+     *
+     *  @param {array} c - The collection to use
+     *  @memberof toolbox.array
+     */
+    function unique (c) {
+        var result = [];
+        forEach(c, function(item) {
+            if (!contains(result, item))
+                result.push(item);
+        });
+        return result;
+    }
+    exports.array.unique = unique;
+
+    if (config.extendPrototypes) {
+        Array.prototype.unique = function() {
+            return unique.call(null, this);
+        };
+    }
+
+    /** 
+     *  Returns the union of N collections 
+     *
+     *  @param {array} args* - A variable number of arrays to union
+     *  @memberof toolbox.array
+     */
+    function union ()     {
+        return reduce(slice(arguments), function (result, collection) {
+            var unioned = cons(result, collection);
+            return unique(unioned);
+        }, []);
+    }
+    exports.array.union = union;
+
+    if (config.extendPrototypes) {
+        Array.prototype.union = function() {
+            return union.call(null, this);
+        };
+    }
+
+    /** 
+     *  Rejects any elements from the provided collection which match the predicate 
+     *
+     *  @param {array} collection - The collection to use
+     *  @param {function} predicate - The predicate function to test elements with
+     *  @memberof toolbox.array
+     */
+    function reject(collection, predicate) {
+        return reduce(collection, function(result, element) {
+            if (!predicate(element))
+                result.push(element);
             return result;
         }, []);
     }
+    exports.array.reject = reject;
 
-    /**
-     *  With no args, returns an empty string. With one arg x, returns
-     *  x.toString(). str(null) returns an empty string. With more than
-     *  one arg, returns the concatenation of the str values of the args.
+    if (config.extendPrototypes) {
+        Array.prototype.reject = function(predicate) {
+            return reject.call(null, this, predicate);
+        };
+    }
+
+    /** 
+     *  Check if a collection contains at least one element matching the predicate 
+     *
+     *  @param {array} collection - The collection to search
+     *  @param {function} predicate - The predicate function to test elements with
+     *  @memberof toolbox.array
      */
-    exports.str = str;
-    function str(seperator) {
-        var args = slice(arguments);
-        // If no seperator was provided, the first argument should be part of the result
-        if (!isType(seperator, 'string')) {
-            seperator = null;
-        } else {
-            args = slice(args, 1);
-        }
+    function any(collection, predicate) {
+        if (!isType(predicate, 'function'))
+            throw new Exception("any: predicate is not callable.");
+        if (!isType(collection, 'array', 'object'))
+            throw new Exception("any: collection provided is not an enumerable object.");
 
-        if (args.length) {
-            return reduce(args, function (memo, arg) {
-                var append = '';
-                // Reduce an array to a string
-                if (isType(arg, 'array'))
-                    append = reduce(arg, function(m, a) { return m + a.toString(); }, '');
-                else if (exists(arg.toString))
-                    append = arg.toString();
-                else
-                    append = Object.prototype.toString.call(arg);
+        return reduce(collection, function(result, element) {
+            if (result) return true;
+            else return predicate(element);
+        }, false);
+    }
+    exports.array.any = any;
 
-                if (isEmpty(memo))
-                    return append;
-                else if (exists(seperator))
-                    return memo + seperator + append;
-                else return memo + append;
-            }, '');
-        } else return '';
+    if (config.extendPrototypes) {
+        Array.prototype.any = function(predicate) {
+            return any.call(null, this, predicate);
+        };
+    }
+
+    /** 
+     *  Check if all elements of a collection pass a truth test 
+     *
+     *  @param {array} collection - The collection to search
+     *  @param {function} predicate - The predicate function to test elements with
+     */
+    function all(collection, predicate) {
+        if (!isType(predicate, 'function'))
+            throw new Exception("all: predicate is not callable.");
+        if (!isType(collection, 'array', 'object'))
+            throw new Exception("all: collection provided is not an enumerable object.");
+
+        return reduce(collection, function(result, element) {
+            if (result) return predicate(element);
+            else return false;
+        }, true);
+    }
+    exports.array.all = all;
+
+    if (config.extendPrototypes) {
+        Array.prototype.all = function(predicate) {
+            return all.call(null, this, predicate);
+        };
     }
 
     /**
-     *  Returns a new string or RegExp (depending on which one was passed in as target).
-     *  EXAMPLES:
+     *  Zip together the contents of two collections. The provided zipper function
+     *  should take two arguments, and produce either a single element, or an array.
+     *  If no zipper function is provided, the default behavior is to alternate elements
+     *  between the first and second collections until there are no elements left. If
+     *  one of the collections is of longer length than the other, whatever is left will
+     *  be concatenated on to the end of the result.
      *
-     *      stringex.interpolate('yellow #{0}', 'moon')    #=> 'yellow moon'
-     *      stringex.interpolate(/^[#{0}]$/g, '\\w')       #=> /^[\w]$/g
-     *      stringex.interpolate('My #{0} is #{name}', 'name', {
-     *          name: 'Paul'
-     *      })                                             #=> 'My name is Paul'
-     *
-     *  **NOTES:**
-     *
-     *  1. The arguments object is used here to allow for an unlimited number of parameters.
-     *  2. You can mix and match interpolation types (named, indexed), but in order to
-     *     use named variables, you must pass in an object with those names as properties.
-     *     Objects are ignored for indexing (they will only be used for replacing named variables)
-     *     so the order of the parameters is important, with Objects being the only exception.
+     *  @param {array} first - The first collection to zip
+     *  @param {array} seoncd - The second collection to zip
+     *  @param {function} zipper - The zipper function: (a, b) => [ab, ab] || ab
+     *  @memberof toolbox.array
      */
-    exports.format = format;
-    function format(s) {
-        function interpolate(s, args) {
-            if (isType(s, 'regexp') || isType(s, 'string')) {
+    function zip(first, second, zipper) {
+        if (first.length === 0) return second;
+        if (second.length === 0) return first;
+        if (!exists(zipper)) {
+            zipper = function(a, b) {
+                return cons(a, b);
+            };
+        }
 
-                // The pattern to match for interpolation variables
-                var interpolated, interpolationPattern = /#\{[\d]+\}|#\{[\w-_]+\}/g;
-                // An array of strings that were split by matching on the interpolation pattern
-                var matches = [];
-                // Regular expression parts to be reassembled later
-                var flags, regex;
+        var heads = zipper(head(first), head(second));
+        var tails = zip(tail(first), tail(second), zipper);
+        return concat(heads, tails);
+    }
+    exports.array.zip = zip;
 
-                if (isType(s, 'regexp')) {
-                    // Get the array of matches for flags, and use
-                    // shift to remove the pattern match element
-                    flags = /.+\/([gim]+)?$/.exec(s.toString());
-                    flags.shift();
-                    // Get the raw pattern without the js jive
-                    regex = /^\/(.+)\/[gim]+?$/.exec(s.toString());
-                    regex.shift();
+    if (config.extendPrototypes) {
+        Array.prototype.zip = function(second, zipper) {
+            return zip.call(null, this, second, zipper);
+        };
+    }
 
-                    // We're assuming that to reach this point, this is a valid regexp,
-                    // so regex will always contain one element, which is the raw pattern
-                    interpolated = regex[0];
-                }
-                else {
-                    interpolated = s;
-                }
+    /**
+     *  Sum the elements of a collection
+     *
+     *  @param {array} collection - The collection to sum
+     *  @memberof toolbox.array
+     */
+    function sum(collection) {
+        return reduce(collection, function(result, element) {
+            return result + element;
+        }, 0);
+    }
+    exports.array.sum = sum;
 
-                if (args.length) {
-                    // For every argument passed in, find the interpolation variable with
-                    // the same index value (minus one to account for the string var istelf).
-                    // So: interpolate("Hello, #{0}. #{1}", 'Paul', "It's nice to meet you.") will
-                    // render "Hello, Paul. It's nice to meet you."
-                    matches = interpolationPattern.test(interpolated) ? interpolated.match(interpolationPattern).length : 0;
+    if (config.extendPrototypes) {
+        Array.prototype.sum = function() {
+            return sum.call(null, this);
+        };
+    }
 
-                    if (matches === args.length) {
-                        // There was an argument supplied for all interpolations
-                        interpolated = doReplace(interpolated, args);
-                    }
-                    else if (matches < args.length) {
-                        // There were more arguments supplied than interpolations
-                        interpolated = doReplace(interpolated, args);
-                    }
-                    else if (matches > args.length) {
-                        // There were fewer arguments supplied than interpolations
-                        var memo = args[args.length - 1];
-                        // Replace the provided arguments
-                        interpolated = doReplace(interpolated, args);
-                        // Replace remaining interpolations with the last provided argument value
-                        interpolated = doReplaceAll(interpolated, memo);
-                    }
-                }
+    /**
+     * Take N elements from a collection
+     *
+     * @param {array} collection - The collection to take from
+     * @param {number} num - The number of elements to take
+     * @memberof toolbox.array
+     */
+    function take(collection, num) {
+        if (num > collection.length) {
+            return collection;
+        } else {
+            var results = [];
+            for (var i = 0; i < num; i++) {
+                results.push(collection[i]);
+            }
+            return results;
+        }
+    }
+    exports.array.take = take;
 
-                return interpolated;
+    if (config.extendPrototypes) {
+        Array.prototype.take = function(num) {
+            return take.call(null, this, num);
+        };
+    }
+
+    /**
+     *  Drop N elements from a collection
+     *
+     *  @param {array} collection - The collection to drop from
+     *  @param {number} num - The number of elements to drop
+     *  @memberof toolbox.array
+     */
+    function drop(collection, num) {
+        if (num > collection.length) {
+            return [];
+        } else {
+            var result = collection;
+            for (var i = 0; i < num; i++) {
+                result.shift();
+            }
+            return result;
+        }
+    }
+    exports.array.drop = drop;
+
+    if (config.extendPrototypes) {
+        Array.prototype.drop = function(num) {
+            return drop.call(null, this, num);
+        };
+    }
+
+    /**
+     *  Create an array of numbers that are included in the provided range.
+     *
+     *  @param {number} low - The low end of the range (inclusive)
+     *  @param {number} high - The high end of the range (inclusive)
+     *  @memberof toolbox.array
+     */
+    function range(low, high) {
+        if (!exists(low) && !exists(high)) {
+            return [];
+        }
+        if (!exists(high)) {
+            high = low;
+            low = 0;
+        }
+        var result = [];
+        for (var i = low; i <= high; i++) {
+            result.push(i);
+        }
+        return result;
+    }
+    exports.array.range = range;
+
+
+    /**
+     *  Generates a value from a function using a provided seed value.
+     *  Every subsequent call to `next` uses the last generated value
+     *  as the new seed. This can be used to generate an infinite sequence
+     *  which can be iterated over using `next` as if it was a regular
+     *  enumerable like an array.
+     *
+     *  @class
+     *  @constructor
+     *  @param {function} generator - The generating function
+     *  @param {any} seed - The first value to send to the generator function
+     *  @memberof toolbox
+     */
+    function Generator(generator, seed) {
+        if (!exists(generator) || !isType(generator, 'function'))
+            throw new Exception('Generator: generator function must be a function.');
+
+        // Set the seed to null if it is not initialized
+        if (!exists(seed)) seed = null;
+        // Store the last value produced
+        var last = seed;
+
+        /**
+         *  Generate and return the next element.
+         *  @memberof toolbox.Generator
+         */
+        this.next = function () {
+            last = generator.call(null, last);
+            return last;
+        };
+
+        /**
+         *  Generate and take the next N elements as an array
+         *  @param {number} n - The number of elements to take
+         *  @memberof toolbox.Generator
+         */
+        this.take = function(n) {
+            var results = [];
+            while (results.length < n) {
+                results.push(this.next());
+            }
+            return results;
+        };
+
+        /**
+         *  Drop the next N elements
+         *  @param {number} n - The number of elements to drop
+         *  @memberof toolbox.Generator
+         */
+        this.drop = function(n) {
+            var count = 0;
+            while (count < n) {
+                this.next();
+            }
+        };
+    }
+    exports.Generator = Generator;
+
+    /**
+     *  Acts as a lazy iterator over a collection (array or object).
+     *
+     *  @class
+     *  @constructor
+     *  @param {array|object} collection - The collection to enumerate
+     *  @memberof toolbox
+     */
+    function Enumerator(collection) {
+        if (!exists(collection) || !isType(collection, 'array', 'object'))
+            collection = [];
+
+        var keys = Object.keys(collection);
+
+        /**
+         *  Move to the next element in the collection and return it.
+         *  @memberof toolbox.Enumerator
+         */
+        this.next = function () {
+            if (keys.length !== 0) {
+                return collection[keys.shift()];
             }
             else {
-                throw new Error('Invalid type passed as interpolation target. Must be string or RegExp.');
+                throw new StopIterationException();
             }
+        };
 
-        }
+        /**
+         *  Reset enumeration to the start of the collection
+         *  @memberof toolbox.Enumerator
+         */
+        this.reset = function() {
+            keys = Object.keys(collection);
+        };
 
-        // Iterate through the arguments, peforming either an indexed or named interpolation depending on param type
-        function doReplace(target, replacements) {
-            var result = target;
-            each(replacements, function (arg, index) {
-                if (isType(arg, 'object')) {
-                    for (var key in arg) {
-                        var pattern = new RegExp('#\\{' + key + '\\}', 'g');
-                        result = result.replace(pattern, arg[key]);
-                    }
-                }
-                else {
-                    var pattern = new RegExp('#\\{' + index + '\\}', 'g');
-                    result = result.replace(pattern, arg.toString());
-                }
-            });
-            return result;
-        }
-
-        // Replace all instances of #{[\d]+}
-        function doReplaceAll(target, replace) {
-            var result = target.replace(interpolationPattern, replace.toString());
-            return result;
-        }
-
-        return interpolate(s, slice(arguments, 1));
+        /**
+         *  Return the length of the underlying collection
+         *  @memberof toolbox.Enumerator
+         */
+        this.count = function() {
+            return Object.keys(collection).length;
+        };
     }
+    exports.Enumerator = Enumerator;
 
+    /**
+     *  Functions for generating/working with random data
+     *  @namespace toolbox.random
+     */
+    exports.random = {};
 
     /**
      *  Returns string of random characters with a length matching the specified limit. Excludes 0
      *  to avoid confusion between 0 and O.
      *
      *  @param {int} limit - The max length of the string returned
+     *  @memberof toolbox.random
      */
-    exports.randomChars = randomChars;
-    function randomChars(limit) {
+    function chars(limit) {
         // If no limit was passed, return a string with a sane default limit
         limit = limit || 32;
         var strongAlphanumerics = [
@@ -770,14 +1380,15 @@
 
         return collected.toString().replace(/[,]/g, '');
     }
-
-
+    exports.random.chars = chars;
 
     /**
-     * Generate a string of N random digits
+     *  Generate a string of N random digits
+     *
+     *  @param {int} limit - The max length of the string returned
+     *  @memberof toolbox.random
      */
-    exports.randomDigits = randomDigits;
-    function randomDigits(limit) {
+    function digits(limit) {
         limit = limit || 32;
         var result = '';
         while (result.length < limit) {
@@ -785,13 +1396,14 @@
         }
         return result.slice(0, limit);
     }
+    exports.random.digits = digits;
 
     /**
      *  Generates a string of N random hexadecimal characters
      *  @param {int} limit - The length of the string to return
+     *  @memberof toolbox.random
      */
-    exports.randomHex = randomHex;
-    function randomHex(limit) {
+    function hex(limit) {
         limit = limit || 32;
         var result = '';
         while (result.length < limit) {
@@ -799,6 +1411,7 @@
         }
         return result.slice(0, limit);
     }
+    exports.random.hex = hex;
 
     /**
      *  Generates an RFC4122, version 4, UUID
@@ -811,273 +1424,43 @@
      *  * http://note19.com/2007/05/27/javascript-guid-generator/
      *  * http://www.broofa.com/Tools/Math.uuid.js
      *  * http://www.broofa.com/blog/?p=151
+     *
+     *  @memberof toolbox.random
      */
-    exports.uuid = uuid;
     function uuid() {
         return randomHex(8) + "-" + randomHex(4) + "-4" + randomHex(3) + "-" + randomHex(8) + randomHex(4);
     }
-
-
-    /** Join a collection with the provided seperator. */
-    exports.join = join;
-    function join   (c, sep) { return Array.prototype.join.call(c, sep); }
-    /** Slice a collection given a start and end index (both optional). */
-    exports.slice = slice;
-    function slice  (c, start, end) { return Array.prototype.slice.call(c, start, end); }
-    /**  Concatenate N arguments into a new array. (immutable) */
-    exports.concat = concat;
-    function concat ()     { return Array.prototype.concat.apply([], slice(arguments)); }
-    /**  Push N arguments onto the provided array (immutable) */
-    exports.push = push;
-    function push   (c)    { return concat(c, slice(arguments, 1)); }
-    /**  Cons two items into a new collection */
-    exports.cons = cons;
-    function cons   (x, y) { return concat(x, y); }
-    /** Return the first element of the provided collection */
-    exports.first = first;
-    function first  (c)    { var result = c[0]; return result; }
-    /** Return the last element of the provided collection */
-    exports.last = last;
-    function last   (c)    { var result = c[c.length-1]; return result; }
-    /** Return the first N elements of the provided collection */
-    exports.head = head;
-    function head   (c, n) { return slice(c, 0, n || 1); }
-    /** Return all but the first element of the provided collection */
-    exports.tail = tail;
-    function tail   (c)    { return slice(c, 1); }
-    /** Returns true of the provided collection contains the given element */
-    exports.contains = contains;
-    function contains (c, item) {
-        return any(c, function (element) { return areEqual(item, element); });
-    }
-    /** Returns only the unique elements from the provided collection */
-    exports.unique = unique;
-    function unique (c) {
-        var result = [];
-        each(c, function(item) {
-            if (!contains(result, item))
-                result.push(item);
-        });
-        return result;
-    }
-    /** Returns the union of N collections */
-    exports.union = union;
-    function union  ()     {
-        return reduce(slice(arguments), function (result, collection) {
-            var unioned = cons(result, collection);
-            return unique(unioned);
-        }, []);
-    }
-
-    /** Rejects any elements from the provided collection which match the predicate */
-    exports.reject = reject;
-    function reject(predicate, collection) {
-        return reduce(collection, function(result, element) {
-            if (!predicate(element))
-                result.push(element);
-            return result;
-        }, []);
-    }
-
-    /** Check if a collection contains at least one element matching the predicate */
-    exports.any = any;
-    function any(collection, predicate) {
-        if (!isType(predicate, 'function'))
-            throw new Exception("any: predicate is not callable.");
-        if (!isType(collection, 'array', 'object'))
-            throw new Exception("any: collection provided is not an enumerable object.");
-
-        return reduce(collection, function(result, element) {
-            if (result) return true;
-            else return predicate(element);
-        }, false);
-    }
-
-    /** Check if all elements of a collection pass a truth test */
-    exports.all = all;
-    function all(collection, predicate) {
-        if (!isType(predicate, 'function'))
-            throw new Exception("all: predicate is not callable.");
-        if (!isType(collection, 'array', 'object'))
-            throw new Exception("all: collection provided is not an enumerable object.");
-
-        return reduce(collection, function(result, element) {
-            if (result) return predicate(element);
-            else return false;
-        }, true);
-    }
-
-    /**
-     *  Zip together the contents of two collections. The provided zipper function
-     *  should take two arguments, and produce either a single element, or an array.
-     *  If no zipper function is provided, the default behavior is to alternate elements
-     *  between the first and second collections until there are no elements left. If
-     *  one of the collections is of longer length than the other, whatever is left will
-     *  be concatenated on to the end of the result.
-     *  @param {array} first - The first collection to zip
-     *  @param {array} seoncd - The second collection to zip
-     *  @param {function} zipper - The zipper function: (a, b) => [ab, ab] || ab
-     */
-    exports.zip = zip;
-    function zip(first, second, zipper) {
-        if (first.length === 0) return second;
-        if (second.length === 0) return first;
-        if (!exists(zipper)) {
-            zipper = function(a, b) {
-                return cons(a, b);
-            };
-        }
-
-        var heads = zipper(head(first), head(second));
-        var tails = zip(tail(first), tail(second), zipper);
-        return concat(heads, tails);
-    }
-
-    /**
-     *  Sum the elements of a collection
-     *  @param {array} collection - The collection to sum
-     */
-    exports.sum = sum;
-    function sum(collection) {
-        return reduce(collection, function(result, element) {
-            return result + element;
-        }, 0);
-    }
-
-    /**
-     * Take N elements from a collection
-     * @param {array} collection - The collection to take from
-     * @param {number} num - The number of elements to take
-     */
-    exports.take = take;
-    function take(collection, num) {
-        if (num > collection.length) {
-            return collection;
-        } else {
-            var results = [];
-            for (var i = 0; i < num; i++) {
-                results.push(collection[i]);
-            }
-            return results;
-        }
-    }
-
-    /**
-     *  Drop N elements from a collection
-     *  @param {array} collection - The collection to drop from
-     *  @param {number} num - The number of elements to drop
-     */
-    exports.drop = drop;
-    function drop(collection, num) {
-        if (num > collection.length) {
-            return [];
-        } else {
-            var result = collection;
-            for (var i = 0; i < num; i++) {
-                result.shift();
-            }
-            return result;
-        }
-    }
-
-    /**
-     *  Create an array of numbers that are included in the provided range.
-     *  @param {number} low - The low end of the range (inclusive)
-     *  @param {number} high - The high end of the range (inclusive)
-     */
-    exports.range = range;
-    function range(low, high) {
-        if (!exists(low) && !exists(high)) {
-            return [];
-        }
-        if (!exists(high)) {
-            high = low;
-            low = 0;
-        }
-        var result = [];
-        for (var i = low; i <= high; i++) {
-            result.push(i);
-        }
-        return result;
-    }
+    exports.random.uuid = uuid;
 
 
     /**
-     *  Generates a value from a function using a provided seed value.
-     *  Every subsequent call to `next` uses the last generated value
-     *  as the new seed. This can be used to generate an infinite sequence
-     *  which can be iterated over using `next` as if it was a regular
-     *  enumerable like an array.
-     *  @constructor
-     *  @param {function} generator - The generating function
-     *  @param {any} seed - The first value to send to the generator function
+     *  Higher order functions for manipulating and composing functions
+     *  @namespace toolbox.func
      */
-    exports.Generator = Generator;
-    function Generator(generator, seed) {
-        if (!exists(generator) || !isType(generator, 'function'))
-            throw new Exception('Generator: generator function must be a function.');
-
-        // Set the seed to null if it is not initialized
-        if (!exists(seed)) seed = null;
-        // Store the last value produced
-        var last = seed;
-        this.next = function () {
-            last = generator.call(null, last);
-            return last;
-        };
-        this.take = function(n) {
-            var results = [];
-            while (results.length < n) {
-                results.push(this.next());
-            }
-            return results;
-        };
-        this.drop = function(n) {
-            var count = 0;
-            while (count < n) {
-                this.next();
-            }
-        };
-    }
-
-    /**
-     *  Acts as a lazy iterator over a collection (array or object).
-     *  @constructor
-     *  @param {array|object} collection - The collection to enumerate
-     */
-    function Enumerator(collection) {
-        if (!exists(collection) || !isType(collection, 'array', 'object'))
-            collection = [];
-
-        var keys = Object.keys(collection);
-        this.next = function () {
-            if (keys.length !== 0) {
-                return collection[keys.shift()];
-            }
-            else {
-                throw new StopIterationException();
-            }
-        };
-        this.reset = function() {
-            keys = Object.keys(collection);
-        };
-        this.count = function() {
-            return Object.keys(collection).length;
-        };
-    }
-
+    exports.func = {};
 
     /**
      *  An empty function that does nothing.
+     *  @memberof toolbox.func
      */
-    exports.noop = noop;
     function noop() { }
+    exports.func.noop = noop;
+
+    if (config.extendPrototypes) {
+        Function.prototype.noop = noop;
+    }
 
     /**
      *  The identity function. Returns it's argument.
+     *  @param {object} x - The object to identify
+     *  @memberof toolbox.func
      */
-    exports.identity = identity;
     function identity(x) { return x; }
+    exports.func.identity = identity;
+
+    if (config.extendPrototypes) {
+        Function.prototype.identity = identity;
+    }
 
     /**
      *  Bind a function context, as well as any arguments you wish to
@@ -1085,12 +1468,22 @@
      *  but only requires whatever additional arguments you want to call
      *  it with.
      *  
-     *  Note: Meant for instance methods, use papply for static functions.
+     *  Note: Meant for instance methods, use partial for static functions.
+     *
+     *  @param {function} fn - The function to bind
+     *  @param {object} context - The object to bind as `this` when executing `fn`
+     *  @memberof toolbox.func
      */
-    exports.bind = bind;
     function bind(fn, context) {
         return function () {
             return fn.apply(context, slice(arguments));
+        };
+    }
+    exports.func.bind = bind;
+
+    if (config.extendPrototypes) {
+        Function.prototype.bind = Function.prototype.bind || function(context) {
+            return bind.call(null, this, context);
         };
     }
 
@@ -1101,24 +1494,30 @@
      *  requires whatever additional arguments you want to call it with.
      *  
      *  Note: Meant for static functions, use bind for instance methods.
+     *
+     *  @param {function} fn - The function to partially apply arguments to
+     *  @param {object} args* - A variable number of arguments to apply
+     *  @memberof toolbox.func
      */
-    exports.papply = papply;
-    function papply(fn) {
+    function partial(fn) {
         var args = slice(arguments, 1);
         return function () {
             var additional = slice(arguments);
             return fn.apply(null, concat(args, additional));
         };
     }
+    exports.func.partial = partial;
 
     /**
      *  Takes a set of functions and returns a fn that is the juxtaposition
      *  of those fns. The returned fn takes a variable number of args, and
-     *  returns a vector containing the result of applying each fn to the
+     *  returns a vector containing the result of applying forEach fn to the
      *  args (left-to-right).
      *  juxt(a, b, c) => abc(x) => [a(x), b(x), c(x)]
+     *
+     *  @param {function} args* - A variable number of functions to juxtapose
+     *  @memberof toolbox.func
      */
-    exports.juxt = juxt;
     function juxt() {
         var fns = slice(arguments);
         if (!fns.length)
@@ -1132,25 +1531,32 @@
             }, []);
         };
     }
+    exports.func.juxt = juxt;
 
     /**
      *  Returns a function which takes the same arguments and performs the same action, 
      *  but returns the opposite truth value of the provided function.
+     *
+     *  @param {function} fn - The function to complement
+     *  @memberof toolbox.func
      */
-    exports.complement = complement;
     function complement(fn) {
         return function() {
             return !fn.apply(null, slice(arguments));
         };
     }
+    exports.func.complement = complement;
 
     /**
-    thread
-        Threads x through each fn. Applies x as the only parameter to the first
-        fn, converting to an array if it is not one already. If there are more
-        functions, inserts the first result as the parameter for the second fn, etc..
-     ****/
-    exports.thread = thread;
+     *
+     *  Threads x through forEach fn. Applies x as the only parameter to the first
+     *  fn, converting to an array if it is not one already. If there are more
+     *  functions, inserts the first result as the parameter for the second fn, etc..
+     *
+     *  @param {object} x - The argument to thread through the provided functions
+     *  @param {function} args* - A variable number of functions to thread through
+     *  @memberof toolbox.func
+     */
     function thread(x) {
         var fns = slice(arguments, 1);
         if (fns.length) {
@@ -1160,6 +1566,7 @@
         }
         else return x;
     }
+    exports.func.thread = thread;
 
     /**
      *  Curry allows you to compose two functions into one monolithic function.
@@ -1167,8 +1574,11 @@
      *  
      *  Example:
      *      curry(f, g)(2) => f(g(2))
+     *
+     *  @param {function} f - The outer function
+     *  @param {function} g - The inner function
+     *  @memberof toolbox.func
      */
-    exports.curry = curry;
     function curry(f, g) {
         if (f && g) {
             return function() {
@@ -1179,6 +1589,7 @@
         }
         else throw new Error('Curry only accepts two functions.');
     }
+    exports.func.curry = curry;
 
     /**
      *  Define a function which dispatches to one or more functions, depending on arguments.
@@ -1230,13 +1641,18 @@
      *  Make your exposed API even more succinct using partial application!
      *
      *      var dbConfig = { environment: 'test' };
-     *      var queryDb = papply(executeQuery, dbConfig);
+     *      var queryDb = partial(executeQuery, dbConfig);
      *
      *  No more conditionals scattered all over your code!!
      *
      *      queryDb('SELECT * FROM NONSENSE WHERE PHRASE IN ("pies", "gerg")');
+     *
+     *  @param {function} dispatcher - The dispatcher function. When called should return an object with a `dispatch` property.
+     *  @param {function} default - The default function to call if no alternatives are available to dispatch to.
+     *  @param {object} args* - A variable number of function definition objects to act as dispatch options
+     *  @memberof toolbox.func
      */
-    exports.defmulti = defmulti;
+    exports.func.defmulti = defmulti;
     function defmulti (dispatcher, $default) {
         if (!isType(dispatcher, 'function'))
             throw new Exception('defmulti: dispatcher must be a function');
@@ -1246,7 +1662,7 @@
         var pool = [];
         // Validate dispatched functions
         var definitions = slice(arguments, 2);
-        each(definitions, function(definition) {
+        forEach(definitions, function(definition) {
             if (!validateDefinition(definition))
                 throw new Exception('defmulti: Function definition is not valid.', fn);
             else
@@ -1262,7 +1678,7 @@
 
             var executing = filter(pool, function(d) { return d.name === dispatchConfig.dispatch; });
             if (executing.length > 0)
-                each(executing, function(d) { d.fn.apply(null, args); });
+                forEach(executing, function(d) { d.fn.apply(null, args); });
             else
                 $default.apply(null, args);
         };
@@ -1275,8 +1691,10 @@
     /**
      *  Cache results for a function for calls with identical arguments
      *  Credit to @philogb, @addyosmani, @mathias, and @DmitryBaranovsk 
+     *
+     *  @param {function} fn - The function to memoize
+     *  @memberof toolbox.func
      */
-    exports.memoize = memoize;
     function memoize(fn) {
         return function () {
             var args   = slice(arguments)
@@ -1297,6 +1715,7 @@
             }
         };
     }
+    exports.func.memoize = memoize;
 
 
     /**
@@ -1318,7 +1737,7 @@
      *  set of arguments. `once` is better used in situations like: 
      *
      *  - A function which satisfies one or more conditions after the first call, but must continually 
-     *    evaluate those conditions each time the function is called (e.g. a function which has to 
+     *    evaluate those conditions forEach time the function is called (e.g. a function which has to 
      *    perform browser feature detection prior to returning a result). These extra computations are 
      *    typically unecessary, and could be expensive to perform. 
      *  - You want to optimize a function which has variable results, but the method by which you get 
@@ -1338,8 +1757,10 @@
      *     methodFirstCalled() => Thu Dec 27 2012 21:19:58 GMT-0600 (Central Standard Time)
      *
      *  [Additional Reading](http://michaux.ca/articles/lazy-function-definition-pattern)
+     *
+     *  @param {function} fn - The function to execute
+     *  @memberof toolbox.func
      */
-    exports.once = once;
     function once(fn) {
         var result;
         return function () {
@@ -1348,13 +1769,15 @@
             return result;
         };
     }
+    exports.func.once = once;
 
     /**
      *  Delay execution of a function by a given number of milliseconds
+     *
      *  @param {function} fn - The function to delay
      *  @param {number} ms - Number of milliseconds to delay (defaults to 100)
+     *  @memberof toolbox.func
      */
-    exports.delay = delay;
     function delay(fn, ms) {
         var timeout = null;
         timeout = setTimeout(function() {
@@ -1363,13 +1786,15 @@
             timeout = null;
         }, exists(ms) ? ms : 100);
     }
+    exports.func.delay = delay;
 
     /**
      *  Repeat execution of a function N times
+     *
      *  @param {function} fn - The function to repeat
      *  @param {number} n - The number of times to repeat
+     *  @memberof toolbox.func
      */
-    exports.repeat = repeat;
     function repeat(fn, n) {
         var remaining = n;
         while (remaining > 0) {
@@ -1377,7 +1802,12 @@
             remaining--;
         }
     }
+    exports.func.repeat = repeat;
 
+    /**
+     *  Logging related classes
+     *  @namespace toolbox.logging
+     */
     exports.logging = {};
 
     var Levels = {
@@ -1391,29 +1821,41 @@
 
     /**
      *  Predefined logging levels
-     *  @static
+     *  @memberof toolbox.logging
      */
     exports.logging.Levels = Levels;
 
+    /**
+     *  The application logger class
+     *  @class
+     *  @constructor
+     *  @memberof toolbox.logging
+     */
     function Logger() {
         this.level = Levels.all;
 
         function _log(message) {
             if (root.console && root.console.log)
-                console.log(message);
+                root.console.log(message);
         }
 
         function _dir(obj) {
             if (root.console && root.console.dir)
-                console.dir(obj);
+                root.console.dir(obj);
             else if (JSON !== null && JSON !== undefined)
                 _log(JSON.stringify(obj));
         }
 
+        /**
+         *  Log a message of the given level to the console.
+         *  @param {Level} level - The logging level to use.
+         *  @param {object} args* - A variable number of arguments to log
+         *  @memberof toolbox.logging.Logger
+         */
         this.log = function(level) {
             var args = slice(arguments, 1);
             if (level.gte(this.level)) {
-                each(args, function(arg) {
+                forEach(args, function(arg) {
                     if (typeof arg === 'string')
                         _log(format('#{0}: #{1} - #{2}', new Date(), level.name, arg));
                     else if (arg instanceof Exception)
@@ -1452,57 +1894,146 @@
         };
     }
 
+    /**
+     *  Log a debug message
+     *  @param {object} args* - A variable number of arguments to log.
+     *  @memberof toolbox.logging.Logger
+     */
     Logger.prototype.debug = function() {
         var args = concat(Levels.debug, slice(arguments));
         this.log.apply(this, args);
     };
-
+    /**
+     *  Log a info message
+     *  @param {object} args* - A variable number of arguments to log.
+     *  @memberof toolbox.logging.Logger
+     */
     Logger.prototype.info = function() {
-        this.log.apply(this, Levels.info, slice(arguments));
+        var args = concat(Levels.info, slice(arguments));
+        this.log.apply(this, args);
     };
-
+    /**
+     *  Log a warn message
+     *  @param {object} args* - A variable number of arguments to log.
+     *  @memberof toolbox.logging.Logger
+     */
     Logger.prototype.warn = function() {
-        this.log.apply(this, Levels.warn, slice(arguments));
+        var args = concat(Levels.warn, slice(arguments));
+        this.log.apply(this, args);
     };
-
+    /**
+     *  Log a error message
+     *  @param {object} args* - A variable number of arguments to log.
+     *  @memberof toolbox.logging.Logger
+     */
     Logger.prototype.error = function() {
-        this.log.apply(this, Levels.error, slice(arguments));
+        var args = concat(Levels.error, slice(arguments));
+        this.log.apply(this, args);
     };
 
     /**
      *  Defines a logging level, and provides facilities for displaying and comparing them
+     *
+     *  @class
      *  @constructor
+     *  @param {number} level - The integer representation of this level. The lower the more verbose.
+     *  @param {string} name - The level name
+     *  @memberof toolbox.logging
      */
-    exports.logging.Level = Level;
     function Level(level, name) {
         this.level = level;
         this.name = name;
     }
+    /** 
+     *  Print the Level's name
+     *  @memberof toolbox.logging.Level 
+     */
     Level.prototype.toString = function() {
         return this.name;
     };
+    /**
+     *  See if this Level is equal to another.
+     *  @param {Level} level - The Level object to compare against
+     *  @memberof toolbox.logging.Level
+     */
     Level.prototype.eq = function(level) {
         return this.level === level.level;
     };
+    /**
+     *  See if this level is higher or equal to another.
+     *  @param {Level} level - The Level object to compare against
+     *  @memberof toolbox.logging.Level
+     */
     Level.prototype.gte = function(level) {
         return this.level >= level.level;
     };
+    exports.logging.Level = Level;
 
     /**
-     *  The core logging object. Provides static methods for logging
-     *  both messages and objects. If a browser (like IE), doesn't support
-     *  displaying objects in the console, but does support JSON, the object
-     *  is rendered as a JSON string.
+     *  The global logging instance.
+     *  @memberof toolbox
+     *  @name log
+     *  @type Logger
      */
     exports.log = new Logger();
 
+    /**
+     *  Creates a new exception
+     *  @class
+     *  @constructor
+     *  @memberof toolbox
+     *  @param {string} message - The message for this exception
+     *  @param {object} context - The context to store along with this exception
+     */
+    function Exception(message, context) {
+        this.context = context;
+        this.message = message;
+        return this;
+    }
+    /** 
+     *  Get the exception message as a string 
+     *  @memberof toolbox.Exception
+     */
+    Exception.prototype.toString = function () {
+        return 'Exception: ' + this.message;
+    };
+    exports.Exception = Exception;
+
+    /**
+     *  Thrown when a Generator reaches the end of it's internal collection.
+     *  @class
+     *  @constructor
+     *  @memberof toolbox
+     */
+    function StopIterationException () {
+        this.message = 'Iteration of the underlying collection has been completed.';
+        return this;
+    }
+    /** 
+     *  Get the exception message as a string 
+     *  @memberof toolbox.StopIterationException
+     */
+    StopIterationException.prototype.toString = function () {
+        return 'StopIterationException: ' + this.message;
+    };
+    exports.StopIterationException = StopIterationException;
+
+
     if (config.createGlobalAliases) {
-        for (var key in exports) {
-            if (!exists(root[key]))
-                root[key] = exports[key];
+        forEach([
+            // Namespaces
+            'string', 'object', 'array', 'func', 'random',
+            // Functions
+            'log',
+            // Classes
+            'Exception', 'StopIterationException', 'Generator', 'Enumerator'
+        ],
+        function(ns) {
+            if (!exists(root[ns]))
+                root[ns] = exports[ns];
             else
-                exports.log.warn('Unable to create global alias for: ' + key + '. One is already defined. Skipping...');
-        }
+                exports.log.warn('Unable to add toolbox.' + ns + ' to global namespace. Name already exists.');
+        });
     }
 
 
