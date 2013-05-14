@@ -8,13 +8,14 @@
     }
     if (typeof define === 'function') {
         // CommonJS AMD
-        define(builder(root, null, false, builder));
+        define('toolbox', null, function() {
+            return builder(root, null, false, builder);
+        });
     }
     else {
         // Vanilla environments (browser)
         root.toolbox = builder(root, null, false, builder);
     }
-
 })(this, function (root, exports, config, builder, undefined) {
 
     exports = exports || {};
