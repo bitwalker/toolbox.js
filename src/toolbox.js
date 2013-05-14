@@ -1879,7 +1879,7 @@
                         e = format('#{0} in file: #{1}', e, ex.fileName);
                     }
                     if (ex.stack) {
-                        e = format('#{e}#{newline}Stack Trace:#{newline}#{stack}', { e: e, newline: string.newline, stack: ex.stack });
+                        e = format('#{e}#{newline}Stack Trace:#{newline}#{stack}', { e: e, newline: newline, stack: ex.stack });
                     }
 
                     return e;
