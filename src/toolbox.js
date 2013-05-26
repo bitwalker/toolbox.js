@@ -31,7 +31,7 @@
      * @name version
      * @type string
      */
-    exports.version = '2.0.2';
+    exports.version = '2.0.3';
 
     var defaultConfig = {
         extendPrototypes:    false,
@@ -1002,6 +1002,22 @@
             return contains.call(null, this, item);
         };
     }
+
+    /**
+     *  Finds the first element that matches the predicate
+     *
+     *  @param {array} c - The collection to search
+     *  @param {function} predicate - The predicate to match against
+     *  @memberof toolbox.array
+     */
+    function find (c, predicate) {
+        for (var i = 0; i < c.length; i++) {
+            if (predicate(c[i]))
+                return c[i];
+        }
+        return null;
+    }
+    exports.array.find = find;
 
     /** 
      *  Returns only the unique elements from the provided collection 
