@@ -132,17 +132,17 @@ vows.describe('Toolbox').addBatch({
             assert.deepEqual(results[1].all, [1, 2, 3]);
         }
     },
-    "Exception": {
-        'when thrown, can be caught as Exception': function() {
+    "ApplicationException": {
+        'when thrown, can be caught as ApplicationException': function() {
             assert.throws(function() {
-                throw new toolbox.Exception('Test', { test: 'things' });
-            }, toolbox.Exception);
+                throw new toolbox.ApplicationException('Test', { test: 'things' });
+            }, toolbox.ApplicationException);
         },
         'when thrown, contains a friendly message, and context if provided': function() {
             try {
-                throw new toolbox.Exception('Testing the error.', { test: 5 });
+                throw new toolbox.ApplicationException('Testing the error.', { test: 5 });
             } catch (ex) {
-                assert.equal(ex.toString(), 'Exception: Testing the error.');
+                assert.equal(ex.toString(), 'ApplicationException: Testing the error.');
                 assert.equal(ex.message, 'Testing the error.');
                 assert.isObject(ex.context);
                 assert.equal(ex.context.test, 5);

@@ -31,7 +31,7 @@
      * @name version
      * @type string
      */
-    exports.version = '2.0.3';
+    exports.version = '2.1.0';
 
     var defaultConfig = {
         extendPrototypes:    false,
@@ -2002,19 +2002,19 @@
      *  @param {string} message - The message for this exception
      *  @param {object} context - The context to store along with this exception
      */
-    function Exception(message, context) {
+    function ApplicationException(message, context) {
         this.context = context;
         this.message = message;
         return this;
     }
     /** 
      *  Get the exception message as a string 
-     *  @memberof toolbox.Exception
+     *  @memberof toolbox.ApplicationException
      */
-    Exception.prototype.toString = function () {
-        return 'Exception: ' + this.message;
+    ApplicationException.prototype.toString = function () {
+        return 'ApplicationException: ' + this.message;
     };
-    exports.Exception = Exception;
+    exports.ApplicationException = ApplicationException;
 
     /**
      *  Thrown when a Generator reaches the end of it's internal collection.
@@ -2043,7 +2043,7 @@
             // Functions
             'log',
             // Classes
-            'Exception', 'StopIterationException', 'Generator', 'Enumerator'
+            'ApplicationException', 'StopIterationException', 'Generator', 'Enumerator'
         ],
         function(ns) {
             if (!exists(root[ns]))
