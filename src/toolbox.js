@@ -31,7 +31,7 @@
      * @name version
      * @type string
      */
-    exports.version = '2.1.2';
+    exports.version = '2.1.3';
 
     var defaultConfig = {
         extendPrototypes:    false,
