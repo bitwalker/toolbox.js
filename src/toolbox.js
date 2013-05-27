@@ -2099,7 +2099,6 @@
         else
             return this.values()[$enum.value - 1];
     };
-
     /**
      *  Get the EnumerationValue object from it's underlying integer value
      *  @param {number} value - The integer value to find in this Enumeration
@@ -2110,6 +2109,26 @@
             throw new ApplicationException('Enumeration.fromValue: Invalid value.', value);
         else
             return this.values()[value];
+    };
+    /**
+     *  Get the EnumerationValue object from it's name
+     *  @param {string} name - The name of the Enumeration value
+     *  @memberof toolbox.Enumeration
+     */
+    Enumeration.prototype.fromName = function(name) {
+        if (typeof this[name] === 'undefined') {
+            // Try searching by name in case the wrong casing was used
+            var values = this.values();
+            for (var i = 0; i < values.length; i++) {
+                if (values[i].name.toLowerCase() === name.toLowerCase()) {
+                    return values[i];
+                }
+            }
+            // No value was found that matches this name
+            return null;
+        } else {
+            return this[name];
+        }
     };
 
     exports.Enumeration = Enumeration;
