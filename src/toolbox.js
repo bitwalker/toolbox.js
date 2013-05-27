@@ -31,7 +31,7 @@
      * @name version
      * @type string
      */
-    exports.version = '2.1.0';
+    exports.version = '2.1.1';
 
     var defaultConfig = {
         extendPrototypes:    false,
@@ -2035,6 +2035,100 @@
     };
     exports.StopIterationException = StopIterationException;
 
+    /**
+     *  A simulated enum object as seen in languages such as C#
+     * 
+     *  Initialize this class with a set of string values that represent
+     *  the names of the enumeration values.
+     *  
+     *  Example:
+     *
+     *      var Weekdays = new Enumeration(['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun']);
+     *      Weekdays.Mon.eq(Weekdays.Mon)   => true
+     *      Weekdays.Mon.toString()         => 'Mon'
+     *      Weekdays.toString()             => 'Mon, Tues, Wed, Thurs, Fri, Sat, Sun';
+     *      Weekdays.next(Weekdays.Mon)     => Weekdays.Tues
+     *      Weekdays.previous(Weekdays.Mon) => Weekdays.Sun
+     *
+     *  @class
+     *  @constructor
+     *  @params {array} values - The values to initialize the enumeration with
+     *  @memberof toolbox
+     */
+    function Enumeration(values) {
+        var enums = [];
+
+        var self = this;
+        forEach(values, function(value, i) {
+            var name = String(value);
+            var $enum = new EnumerationValue(name, i);
+            self[name] = $enum;
+            enums.push($enum);
+        });
+
+        this.values = function() {
+            return enums;
+        };
+    }
+    /**
+     *  Render a string of all this Enumeration's values
+     *  @memberof toolbox.Enumeration
+     */
+    Enumeration.prototype.toString = function() {
+        return str(', ', pick(this.values(), 'name'));
+    };
+    /**
+     *  Get the next value following the provided value. Wraps around the end if the last value is the one provided.
+     *  @memberof toolbox.Enumeration
+     */
+    Enumeration.prototype.next = function($enum) {
+        // Wrap around
+        if (this.values().length < ($enum.value + 1))
+            return this.values()[0];
+        else
+            return this.values()[$enum.value + 1];
+    };
+    /**
+     *  Get the previous value before the provided value. Wraps around the start if the first value is the one provided.
+     *  @memberof toolbox.Enumeration
+     */
+    Enumeration.prototype.previous = function($enum) {
+        // Wrap around
+        if ($enum.value === 0)
+            return this.values()[this.values.length - 1];
+        else
+            return this.values()[$enum.value - 1];
+    };
+
+    exports.Enumeration = Enumeration;
+
+    /**
+     *  A value belonging to an Enumeration object
+     *  @class
+     *  @constructor
+     *  @param {string} name - The name of the value
+     *  @param {number} value - The integer value for this enum
+     *  @memberof toolbox
+     */
+    function EnumerationValue(name, value) {
+        this.name  = name;
+        this.value = value;
+    }
+    /**
+     *  The string representation of this enum value
+     *  @memberof toolbox.EnumerationValue
+     */
+    EnumerationValue.prototype.toString = function() {
+        return this.name;
+    };
+    /**
+     *  Determine if this enum value is equal to another
+     *  @param {EnumerationValue} $enum - The enum value to compare to
+     *  @memberof toolbox.EnumerationValue
+     */
+    EnumerationValue.prototype.eq = function($enum) {
+        return exists($enum) && this.value === $enum.value && this.name === $enum.name;
+    };
 
     if (config.createGlobalAliases) {
         forEach([
@@ -2043,7 +2137,9 @@
             // Functions
             'log',
             // Classes
-            'ApplicationException', 'StopIterationException', 'Generator', 'Enumerator'
+            'ApplicationException', 'StopIterationException', 'Generator', 'Enumerator',
+            // Enums
+            'Enumeration'
         ],
         function(ns) {
             if (!exists(root[ns]))

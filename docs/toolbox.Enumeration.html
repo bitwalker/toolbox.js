@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Generator</title>
+    <title>JSDoc: Class: Enumeration</title>
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Class: Generator</h1>
+    <h1 class="page-title">Class: Enumeration</h1>
     
     
 
@@ -29,7 +29,7 @@
     <h2>
         <span class="ancestors"><a href="toolbox.html">toolbox</a>.</span>
     
-    Generator
+    Enumeration
     </h2>
     
 </header>  
@@ -41,7 +41,7 @@
     
         
 <dt>
-    <h4 class="name" id="Generator"><span class="type-signature"></span>new Generator<span class="signature">(generator, seed)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Enumeration"><span class="type-signature"></span>new Enumeration<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -49,11 +49,19 @@
     
     
     <div class="description">
-        <p>Generates a value from a function using a provided seed value.
- Every subsequent call to <code>next</code> uses the last generated value
- as the new seed. This can be used to generate an infinite sequence
- which can be iterated over using <code>next</code> as if it was a regular
- enumerable like an array.</p>
+        <p>A simulated enum object as seen in languages such as C#</p>
+
+<p> Initialize this class with a set of string values that represent
+ the names of the enumeration values.</p>
+
+<p> Example:</p>
+
+<pre><code> var Weekdays = new Enumeration([&#39;Mon&#39;, &#39;Tues&#39;, &#39;Wed&#39;, &#39;Thurs&#39;, &#39;Fri&#39;, &#39;Sat&#39;, &#39;Sun&#39;]);
+ Weekdays.Mon.eq(Weekdays.Mon)   =&gt; true
+ Weekdays.Mon.toString()         =&gt; &#39;Mon&#39;
+ Weekdays.toString()             =&gt; &#39;Mon, Tues, Wed, Thurs, Fri, Sat, Sun&#39;;
+ Weekdays.next(Weekdays.Mon)     =&gt; Weekdays.Tues
+ Weekdays.previous(Weekdays.Mon) =&gt; Weekdays.Sun</code></pre>
     </div>
     
 
@@ -61,77 +69,6 @@
     
     
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>generator</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"><p>The generating function</p></td>
-        </tr>
-	
-	
-	
-        <tr>
-            
-                <td class="name"><code>seed</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">any</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"><p>The first value to send to the generator function</p></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
     
     
     
@@ -157,7 +94,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1279
+        toolbox.js, line 2058
     </li></ul></dd>
     
     
@@ -203,7 +140,7 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="this.drop"><span class="type-signature">&lt;static> </span>this.drop<span class="signature">(n)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="next"><span class="type-signature">&lt;static> </span>Enumeration#next<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -211,7 +148,7 @@
     
     
     <div class="description">
-        <p>Drop the next N elements</p>
+        <p>Get the next value following the provided value. Wraps around the end if the last value is the one provided.</p>
     </div>
     
 
@@ -219,54 +156,6 @@
     
     
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>n</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"><p>The number of elements to drop</p></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
     
     
     
@@ -292,7 +181,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1315
+        toolbox.js, line 2084
     </li></ul></dd>
     
     
@@ -320,7 +209,7 @@
         
             
 <dt>
-    <h4 class="name" id="this.next"><span class="type-signature">&lt;static> </span>this.next<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="previous"><span class="type-signature">&lt;static> </span>Enumeration#previous<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -328,7 +217,7 @@
     
     
     <div class="description">
-        <p>Generate and return the next element.</p>
+        <p>Get the previous value before the provided value. Wraps around the start if the first value is the one provided.</p>
     </div>
     
 
@@ -361,7 +250,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1292
+        toolbox.js, line 2095
     </li></ul></dd>
     
     
@@ -389,7 +278,7 @@
         
             
 <dt>
-    <h4 class="name" id="this.take"><span class="type-signature">&lt;static> </span>this.take<span class="signature">(n)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="toString"><span class="type-signature">&lt;static> </span>Enumeration#toString<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -397,7 +286,7 @@
     
     
     <div class="description">
-        <p>Generate and take the next N elements as an array</p>
+        <p>Render a string of all this Enumeration&#39;s values</p>
     </div>
     
 
@@ -405,54 +294,6 @@
     
     
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>n</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"><p>The number of elements to take</p></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
     
     
     
@@ -478,7 +319,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        toolbox.js, line 1302
+        toolbox.js, line 2077
     </li></ul></dd>
     
     
