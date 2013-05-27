@@ -2100,6 +2100,18 @@
             return this.values()[$enum.value - 1];
     };
 
+    /**
+     *  Get the EnumerationValue object from it's underlying integer value
+     *  @param {number} value - The integer value to find in this Enumeration
+     *  @memberof toolbox.Enumeration
+     */
+    Enumeration.prototype.fromValue = function(value) {
+        if (this.values().length < value)
+            throw new ApplicationException('Enumeration.fromValue: Invalid value.', value);
+        else
+            return this.values()[value];
+    };
+
     exports.Enumeration = Enumeration;
 
     /**
