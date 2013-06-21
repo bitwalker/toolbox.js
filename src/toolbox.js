@@ -1789,19 +1789,30 @@
     exports.func.once = once;
 
     /**
-     *  Delay execution of a function by a given number of milliseconds
+     *  Delay execution of a function or array of functions by a given number of milliseconds
      *
-     *  @param {function} fn - The function to delay
+     *  @param {function|array} fn - The function, or array of functions to delay (in order of appearance)
      *  @param {number} ms - Number of milliseconds to delay (defaults to 100)
      *  @memberof toolbox.func
      */
     function delay(fn, ms) {
-        var timeout = null;
-        timeout = setTimeout(function() {
-            fn();
-            clearTimeout(timeout);
-            timeout = null;
-        }, exists(ms) ? ms : 100);
+        // Ensure delay time is set
+        ms = exists(ms) ? ms : 100;
+        // Create recursive function for executing the delay
+        var execute = function(target) {
+            var timeout = null;
+            timeout = setTimeout(function() {
+                target();
+                clearTimeout(timeout);
+                timeout = null;
+                // If we are iterating over an array of functions, recursively call execute
+                if (isType(fn, 'array') && fn.length > 0) {
+                    execute(fn.shift());
+                }
+            }, exists(ms) ? ms : 100);
+        };
+
+        execute(isFunction(fn) ? fn : fn.shift());
     }
     exports.func.delay = delay;
 
